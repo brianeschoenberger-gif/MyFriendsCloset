@@ -9,8 +9,8 @@ import './App.css'
 
 function App() {
   const [identity, setIdentity] = usePersistentState<Identity>(storageKeys.identity, 'owner')
-  const [items, setItems] = usePersistentState<ClosetItem[]>(storageKeys.items, initialItems)
-  const [requests, setRequests] = usePersistentState<BorrowRequest[]>(storageKeys.requests, initialRequests)
+  const [items, setItems, itemStorageFailure, clearItemStorageFailure] = usePersistentState<ClosetItem[]>(storageKeys.items, initialItems)
+  const [requests, setRequests, requestStorageFailure, clearRequestStorageFailure] = usePersistentState<BorrowRequest[]>(storageKeys.requests, initialRequests)
   const [page, setPage] = useState<Page>('home')
   const [selectedItem, setSelectedItem] = useState<ClosetItem | null>(null)
   const [requestingItem, setRequestingItem] = useState<ClosetItem | null>(null)
@@ -32,28 +32,34 @@ function App() {
 
   function updateVisibility(item: ClosetItem, visibility: Visibility) {
     const updatedAt = new Date().toISOString()
-    setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, visibility, updatedAt } : entry))
-    setSelectedItem({ ...item, visibility, updatedAt })
-    notify(`Now ${visibility.toLowerCase()}`)
+    if (setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, visibility, updatedAt } : entry))) {
+      setSelectedItem({ ...item, visibility, updatedAt })
+      notify(`Now ${visibility.toLowerCase()}`)
+    }
   }
 
   function deleteItem(item: ClosetItem) {
-    setItems((current) => current.filter((entry) => entry.id !== item.id))
-    setRequests((current) => current.filter((request) => request.itemId !== item.id))
-    setSelectedItem(null)
-    notify('Item deleted')
+    if (setItems((current) => current.filter((entry) => entry.id !== item.id))) {
+      setRequests((current) => current.filter((request) => request.itemId !== item.id))
+      setSelectedItem(null)
+      notify('Item deleted')
+    }
   }
 
   function saveRequest(request: BorrowRequest) {
-    setRequests((current) => [...current.filter((entry) => !(entry.itemId === request.itemId && entry.requesterId === request.requesterId && entry.status === 'Pending')), request])
-    setRequestingItem(null)
-    setSelectedItem(null)
-    notify('Borrow request sent')
+    const saved = setRequests((current) => [...current.filter((entry) => !(entry.itemId === request.itemId && entry.requesterId === request.requesterId && entry.status === 'Pending')), request])
+    if (saved) {
+      setRequestingItem(null)
+      setSelectedItem(null)
+      notify('Borrow request sent')
+    }
+    return saved
   }
 
   function resolveRequest(id: number, status: 'Approved' | 'Declined') {
-    setRequests((current) => current.map((request) => request.id === id ? { ...request, status, updatedAt: new Date().toISOString() } : request))
-    notify(status === 'Approved' ? 'Borrow request approved' : 'Request declined')
+    if (setRequests((current) => current.map((request) => request.id === id ? { ...request, status, updatedAt: new Date().toISOString() } : request))) {
+      notify(status === 'Approved' ? 'Borrow request approved' : 'Request declined')
+    }
   }
 
   const pendingCount = requests.filter((request) => identity === 'owner' ? request.ownerId === 'owner' && request.status === 'Pending' : request.requesterId === identity && request.status === 'Pending').length
@@ -61,6 +67,7 @@ function App() {
   return <div className="app-shell" data-identity={identity}>
     <header className="topbar"><button className="brand" onClick={() => navigate('home')} aria-label="Go home"><span className="brand-mark">M</span><span>my friends closet</span></button><nav className="desktop-nav" aria-label="Primary navigation"><NavButton active={page === 'home'} onClick={() => navigate('home')} label="Home" />{identity === 'owner' && <NavButton active={page === 'closet'} onClick={() => navigate('closet')} label="My closet" />}<NavButton active={page === 'friends'} onClick={() => navigate('friends')} label={identity === 'friend' ? "Brian's closet" : 'Friends'} /><NavButton active={page === 'requests'} onClick={() => navigate('requests')} label="Requests" count={pendingCount} /></nav><div className="header-actions"><button className="icon-button" aria-label="Search"><Search size={19} /></button><div className="identity-switcher" aria-label="Demo identity"><button className={identity === 'owner' ? 'active' : ''} onClick={() => switchIdentity('owner')}>Brian</button><button className={identity === 'friend' ? 'active' : ''} onClick={() => switchIdentity('friend')}>Alex</button></div><span className="avatar self" aria-label={`Current identity: ${profile.name}`}>{profile.initials}</span></div></header>
     <div className={`identity-banner ${identity}`}><strong>{identity === 'owner' ? 'Owner mode' : 'Friend mode'}</strong><span>{identity === 'owner' ? 'Add clothes and respond to requests.' : "You are viewing Brian's shared closet."}</span></div>
+    {(itemStorageFailure || requestStorageFailure) && <div className="storage-alert" role="alert"><div><strong>Not saved</strong><span>{itemStorageFailure?.message ?? requestStorageFailure?.message}</span></div><div><button onClick={() => { setIdentity('owner'); setPage('closet'); setSelectedItem(null) }}>Manage closet</button><button aria-label="Dismiss storage warning" onClick={() => { clearItemStorageFailure(); clearRequestStorageFailure() }}>Dismiss</button></div></div>}
     <main>
       {page === 'home' && (identity === 'owner' ? <Dashboard navigate={navigate} items={ownerItems} requests={requests.filter((request) => request.ownerId === 'owner')} onItem={setSelectedItem} /> : <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} />)}
       {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${ownerItems.length} saved pieces, ${ownerItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><button className="primary-button" onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></PageHeading><div className="filter-row">{['All', 'Dresses', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} onClick={() => setCategory(filter)}>{filter}</button>)}</div><div className="item-grid">{visibleOwnItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div></section>}
@@ -71,7 +78,7 @@ function App() {
     </main>
     <nav className="mobile-nav" aria-label="Mobile navigation"><MobileNav icon={<Home />} label="Home" active={page === 'home'} onClick={() => navigate('home')} />{identity === 'owner' && <MobileNav icon={<Shirt />} label="Closet" active={page === 'closet'} onClick={() => navigate('closet')} />}<MobileNav icon={<Users />} label="Share" active={page === 'friends'} onClick={() => navigate('friends')} /><MobileNav icon={<Sparkles />} label="Style" active={page === 'style'} onClick={() => navigate('style')} /><MobileNav icon={<CircleUserRound />} label="Requests" active={page === 'requests'} onClick={() => navigate('requests')} /></nav>
     {selectedItem && <ItemModal item={selectedItem} own={identity === 'owner' && selectedItem.ownerId === 'owner'} close={() => setSelectedItem(null)} updateVisibility={updateVisibility} requestItem={(item) => setRequestingItem(item)} deleteItem={deleteItem} />}
-    {showAdd && <AddItemModal close={() => setShowAdd(false)} save={(item) => { setItems((current) => [...current, item]); setShowAdd(false); notify('Saved to your closet') }} />}
+    {showAdd && <AddItemModal close={() => setShowAdd(false)} save={(item) => { const saved = setItems((current) => [...current, item]); if (saved) { setShowAdd(false); notify('Saved to your closet') } return saved }} />}
     {requestingItem && <BorrowRequestModal item={requestingItem} requester={identity} close={() => setRequestingItem(null)} save={saveRequest} />}
     {toast && <div className="toast"><Check size={17} /> {toast}</div>}
   </div>

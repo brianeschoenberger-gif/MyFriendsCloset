@@ -25,7 +25,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Document the persistence decision.
 - [x] Create a storage abstraction for identity, closet items, and requests.
 - [x] Persist user-created items and borrow requests after refresh.
-- [ ] Add storage quota handling and image compression.
+- [x] Add atomic storage quota handling and image compression.
 - [ ] Add a Supabase repository implementation behind the abstraction.
 
 ### Demo auth / identity
@@ -41,7 +41,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Show image preview before saving.
 - [x] Persist uploaded image with the item.
 - [x] Validate file type, size, and missing-image errors.
-- [ ] Compress large images before local persistence.
+- [x] Compress large raster images before local persistence.
 
 ### Closet item CRUD
 

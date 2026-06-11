@@ -27,3 +27,7 @@ Track meaningful changes after each agentic loop.
 - Added a 390px Playwright E2E covering image upload, refresh persistence, visibility, friend request, owner approval, and status persistence.
 - Made Style Me occasion, vibe, and closet-source controls stateful.
 - Added verified insufficient-closet guidance and explicit owned-versus-borrowed outfit labels.
+- Added client-side photo downscaling and JPEG compression for large phone uploads.
+- Made local persistence atomic and added visible quota-recovery guidance instead of false success states.
+- Extended the 390px Playwright flow to verify a 2400x1800 upload is persisted as a 1600x1200 JPEG.
+- Added automated coverage proving quota failures keep the add-item form and unsaved data visible.

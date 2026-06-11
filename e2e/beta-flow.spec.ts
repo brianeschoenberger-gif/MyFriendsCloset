@@ -1,4 +1,3 @@
-import path from 'node:path'
 import { expect, test } from '@playwright/test'
 
 test('owner upload to persisted friend request and approval', async ({ page }) => {
@@ -8,7 +7,22 @@ test('owner upload to persisted friend request and approval', async ({ page }) =
 
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
   await page.getByRole('button', { name: 'Add from camera' }).click()
-  await page.locator('input[type="file"]').setInputFiles(path.join(import.meta.dirname, 'fixtures', 'closet-item.svg'))
+  const phonePhoto = await page.evaluate(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 2400
+    canvas.height = 1800
+    const context = canvas.getContext('2d')!
+    const gradient = context.createLinearGradient(0, 0, 2400, 1800)
+    gradient.addColorStop(0, '#e7c7b8')
+    gradient.addColorStop(1, '#7f3f53')
+    context.fillStyle = gradient
+    context.fillRect(0, 0, 2400, 1800)
+    context.fillStyle = '#fffaf0'
+    context.fillRect(850, 300, 700, 1200)
+    return canvas.toDataURL('image/png').split(',')[1]
+  })
+  await page.locator('input[type="file"]').setInputFiles({ name: 'phone-photo.png', mimeType: 'image/png', buffer: Buffer.from(phonePhoto, 'base64') })
+  await expect(page.getByText(/Photo optimized for your closet/)).toBeVisible()
   await page.getByLabel('Item name').fill('E2E rooftop dress')
   await page.getByLabel('Size').fill('M')
   await page.getByLabel('Color').fill('Berry')
@@ -16,6 +30,10 @@ test('owner upload to persisted friend request and approval', async ({ page }) =
   await page.getByRole('button', { name: 'Save to my closet' }).click()
 
   await expect(page.getByRole('heading', { name: 'E2E rooftop dress' })).toBeVisible()
+  expect(await page.evaluate(() => {
+    const item = JSON.parse(localStorage.getItem('mfc-beta-items-v1') ?? '[]').find((entry: { name: string }) => entry.name === 'E2E rooftop dress')
+    return item?.imageMeta?.width === 1600 && item?.imageMeta?.height === 1200 && item?.imageData?.startsWith('data:image/jpeg')
+  })).toBe(true)
   await page.reload()
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
   await expect(page.getByRole('heading', { name: 'E2E rooftop dress' })).toBeVisible()

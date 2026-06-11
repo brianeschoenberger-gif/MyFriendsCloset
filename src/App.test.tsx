@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { StylePage } from './components/Pages'
 
@@ -25,6 +25,7 @@ async function addPhotoItem(name = 'Sunset midi dress') {
 
 describe('My Friends Closet playable beta', () => {
   beforeEach(() => window.localStorage.clear())
+  afterEach(() => vi.restoreAllMocks())
 
   it('uploads a photo item and restores it from persistent storage', async () => {
     const first = render(<App />)
@@ -33,6 +34,7 @@ describe('My Friends Closet playable beta', () => {
     expect(screen.getByRole('heading', { name: 'Sunset midi dress' })).toBeInTheDocument()
     expect(screen.getByText('Saved to your closet')).toBeInTheDocument()
     expect(window.localStorage.getItem('mfc-beta-items-v1')).toContain('Sunset midi dress')
+    expect(window.localStorage.getItem('mfc-beta-items-v1')).toContain('imageMeta')
 
     first.unmount()
     render(<App />)
@@ -95,5 +97,23 @@ describe('My Friends Closet playable beta', () => {
     expect(screen.queryByRole('heading', { name: 'Your looks are ready' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'A little bold' }))
     expect(screen.getByRole('button', { name: 'A little bold' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('keeps the add form open and explains how to recover from storage quota failure', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(primaryNav().getByRole('button', { name: 'My closet' }))
+    await user.click(screen.getByRole('button', { name: 'Add from camera' }))
+    await user.upload(screen.getByLabelText(/Take or choose a photo/), new File(['photo'], 'dress.png', { type: 'image/png' }))
+    await user.type(screen.getByLabelText('Item name'), 'Quota test dress')
+    await user.type(screen.getByLabelText('Color'), 'Blue')
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError') })
+
+    await user.click(screen.getByRole('button', { name: 'Save to my closet' }))
+
+    expect(screen.getByRole('heading', { name: 'Add an item' })).toBeInTheDocument()
+    expect(screen.getByText(/Your closet is out of local space/)).toBeInTheDocument()
+    expect(screen.getByText('Not saved')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Quota test dress' })).not.toBeInTheDocument()
   })
 })

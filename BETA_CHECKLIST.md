@@ -57,7 +57,7 @@ Evidence: Automated Testing Library coverage verifies owner/friend switching and
 - [x] Image survives refresh using the chosen persistence layer.
 
 Score: 2/2
-Evidence: Vitest uses a real File object and Playwright uploads `e2e/fixtures/closet-item.svg`; both verify saved output and refresh persistence. The input uses `accept="image/*"` and `capture="environment"`; physical-device camera behavior remains browser-dependent.
+Evidence: Vitest uses a real File object and verifies refresh persistence. Playwright generates and uploads a 2400x1800 PNG, then proves it was stored as a 1600x1200 JPEG before completing the persisted beta flow. The input uses `accept="image/*"` and `capture="environment"`; physical-device camera behavior remains browser-dependent.
 
 ### Closet item persistence
 
@@ -69,7 +69,7 @@ Evidence: Vitest uses a real File object and Playwright uploads `e2e/fixtures/cl
 - [x] User can delete item.
 
 Score: 2/2
-Evidence: Automated tests cover creation and restoration; manual and component verification cover details and visibility. Delete is implemented with request cleanup.
+Evidence: Automated tests cover creation, restoration, image metadata, and quota failure recovery; manual and component verification cover details and visibility. Persistence is atomic, so rejected writes do not produce false success UI. Delete is implemented with request cleanup.
 
 ### Visibility and sharing
 
@@ -122,4 +122,4 @@ Total possible score: 18 points.
 
 Current score: 17/18
 Critical blockers: Cross-device sharing is local-only and hosted deployment is unverified because no deployment target account is configured.
-Next highest-impact task: Verify a hosted preview when a target is available; meanwhile add image compression and storage-quota recovery for physical-phone reliability.
+Next highest-impact task: Verify a hosted preview when a target is available; meanwhile add a copyable invite link and first-run onboarding for friend testing.

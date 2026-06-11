@@ -24,7 +24,7 @@ Open the Vite URL on the computer. To test on a phone connected to the same Wi-F
 9. Switch back to **Brian**, open **Requests**, and approve or decline it.
 10. Refresh or switch back to Alex and confirm the updated status remains.
 
-Data is saved in browser `localStorage`, including uploaded photos as data URLs. Keep images under 5 MB. This is a durable single-device demo, not cross-device cloud sync yet.
+Data is saved in browser `localStorage`, including uploaded photos as data URLs. Raster phone photos up to 15 MB are downscaled to a maximum 1600px dimension and stored as compressed JPEGs. If browser storage is full, the form remains open and explains how to recover instead of falsely reporting success. This is a durable single-device demo, not cross-device cloud sync yet.
 
 ## Checks
 
@@ -35,7 +35,7 @@ npm run test:e2e
 npm run build
 ```
 
-`npm run test:e2e` launches the app at a 390x844 viewport and automates the complete persisted beta flow with a stable fixture image. Install the browser runtime once with `npx playwright install chromium` if Playwright reports that Chromium is missing.
+`npm run test:e2e` launches the app at a 390x844 viewport, generates a large phone-like PNG, verifies 1600px JPEG compression, and automates the complete persisted beta flow. Install the browser runtime once with `npx playwright install chromium` if Playwright reports that Chromium is missing.
 
 ## Deploy
 

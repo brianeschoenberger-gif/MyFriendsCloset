@@ -22,6 +22,13 @@ export type ClosetItem = {
   color: string
   glyph: string
   imageData?: string
+  imageMeta?: {
+    originalBytes: number
+    storedBytes: number
+    width?: number
+    height?: number
+    compressed: boolean
+  }
   occasionTags: string[]
   notes: string
   createdAt: string

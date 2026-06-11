@@ -67,3 +67,11 @@ Context: Passing builds and component tests alone do not prove that upload, refr
 Options considered: Continue manual-only checks, rely on Testing Library, or add Playwright with a stable image fixture.
 Why: Playwright provides repeatable evidence across the real browser persistence boundary while the checklist prevents unverified work from being marked complete.
 Consequences: Browser installation is required once in each environment. Future beta changes must keep both Vitest and Playwright suites passing and update checklist evidence.
+
+### 2026-06-11 - Atomic persistence and bounded photo storage
+
+Decision: Downscale raster uploads to a maximum 1600px dimension, encode them as JPEG at 82 percent quality, and write localStorage synchronously before updating React state.
+Context: Modern phone photos can exhaust localStorage quickly, while effect-based persistence can let the UI report success before a quota failure occurs.
+Options considered: Keep a 5 MB rejection limit, move immediately to IndexedDB, or compress before an atomic localStorage write.
+Why: Compression substantially increases the number of usable beta uploads without changing the current repository boundary. Atomic writes keep UI state aligned with durable state and expose actionable quota failures.
+Consequences: SVG and GIF uploads are preserved without raster conversion. Physical devices still have browser-specific quotas, so hosted object storage remains necessary for a multi-device beta.
