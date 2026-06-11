@@ -113,13 +113,13 @@ Evidence: Suggestions use persisted items, stateful occasion/vibe/source control
 - [x] App is configured as a standard Vite `dist` deployment for Vercel/Netlify.
 - [x] Known deployment limitations are documented.
 
-Score: 1/2
-Evidence: README contains Vercel/Netlify settings and localStorage limitations. No hosted deployment has been verified because no target account is configured.
+Score: 2/2
+Evidence: README contains GitHub Pages, Vercel, and Netlify settings plus localStorage limitations. The GitHub Pages workflow completed successfully on 2026-06-11, and `https://brianeschoenberger-gif.github.io/MyFriendsCloset/` returned HTTP 200 with repository-relative assets.
 
 ## Overall beta score
 
 Total possible score: 18 points.
 
-Current score: 17/18
-Critical blockers: Cross-device sharing is local-only and hosted deployment is unverified because no deployment target account is configured.
-Next highest-impact task: Verify a hosted preview when a target is available; meanwhile add sticky mobile save/request actions and investigate the sandbox-safe Playwright browser runtime for this automation environment.
+Current score: 18/18
+Critical blockers: None for the single-device playable beta. Cross-device sharing remains local-only until a hosted backend is added.
+Next highest-impact task: Add sticky mobile save/request actions and run the physical-device camera/quota flow against the GitHub Pages deployment.
