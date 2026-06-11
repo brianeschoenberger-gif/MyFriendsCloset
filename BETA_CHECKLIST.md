@@ -46,7 +46,7 @@ Evidence: Manual in-app browser verification and the Playwright E2E at 390x844 c
 - [x] Owner and friend see appropriate views.
 
 Score: 2/2
-Evidence: Automated Testing Library coverage verifies owner/friend switching and private-item exclusion; mobile browser verification confirmed both modes.
+Evidence: Automated Testing Library coverage verifies owner/friend switching, private-item exclusion, first-run onboarding dismissal persistence, and invite deep-link entry into friend mode. Mobile browser verification previously confirmed both modes.
 
 ### Photo upload / camera capture
 
@@ -81,7 +81,7 @@ Evidence: Automated tests cover creation, restoration, image metadata, and quota
 - [x] Friend sharing is testable through demo mode and invite code.
 
 Score: 2/2
-Evidence: Automated visibility test confirms private exclusion and shared-item display. Brian/Alex demo modes and `MFC-BRIAN` invite code make sharing testable.
+Evidence: Automated visibility test confirms private exclusion and shared-item display. Brian/Alex demo modes, `MFC-BRIAN`, and the copied `?invite=MFC-BRIAN&mode=friend` link make sharing testable without production auth.
 
 ### Borrow requests
 
@@ -122,4 +122,4 @@ Total possible score: 18 points.
 
 Current score: 17/18
 Critical blockers: Cross-device sharing is local-only and hosted deployment is unverified because no deployment target account is configured.
-Next highest-impact task: Verify a hosted preview when a target is available; meanwhile add a copyable invite link and first-run onboarding for friend testing.
+Next highest-impact task: Verify a hosted preview when a target is available; meanwhile add sticky mobile save/request actions and investigate the sandbox-safe Playwright browser runtime for this automation environment.

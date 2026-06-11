@@ -31,3 +31,6 @@ Track meaningful changes after each agentic loop.
 - Made local persistence atomic and added visible quota-recovery guidance instead of false success states.
 - Extended the 390px Playwright flow to verify a 2400x1800 upload is persisted as a 1600x1200 JPEG.
 - Added automated coverage proving quota failures keep the add-item form and unsaved data visible.
+- Added a persistent first-run beta guide that explains the Brian-to-Alex borrow loop.
+- Added copy/share invite-link actions plus a friend-mode deep link for `MFC-BRIAN`.
+- Updated Playwright's Windows web-server command to use `npm.cmd` instead of the blocked PowerShell shim.

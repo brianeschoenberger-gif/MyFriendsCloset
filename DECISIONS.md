@@ -75,3 +75,11 @@ Context: Modern phone photos can exhaust localStorage quickly, while effect-base
 Options considered: Keep a 5 MB rejection limit, move immediately to IndexedDB, or compress before an atomic localStorage write.
 Why: Compression substantially increases the number of usable beta uploads without changing the current repository boundary. Atomic writes keep UI state aligned with durable state and expose actionable quota failures.
 Consequences: SVG and GIF uploads are preserved without raster conversion. Physical devices still have browser-specific quotas, so hosted object storage remains necessary for a multi-device beta.
+
+### 2026-06-11 - Demo invite links deep-link into friend mode
+
+Decision: Treat the demo invite as a shareable URL with `?invite=MFC-BRIAN&mode=friend`, not only a visible code.
+Context: The beta already had a visible invite code, but friend testing still required explaining how to switch identities manually after opening the app.
+Options considered: Keep a copy-only invite code, add a deep-link URL that auto-enters friend mode, or delay invite behavior until hosted auth exists.
+Why: A URL-based invite better matches the intended friend-sharing flow, remains compatible with the localStorage fallback, and is testable without backend credentials.
+Consequences: The link is still single-browser and single-device because persistence is local-only. Hosted auth and storage will later replace this demo deep link with real invitations.

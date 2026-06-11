@@ -4,6 +4,7 @@ export const storageKeys = {
   items: 'mfc-beta-items-v1',
   requests: 'mfc-beta-requests-v1',
   identity: 'mfc-beta-identity-v1',
+  onboardingDismissed: 'mfc-beta-onboarding-dismissed-v1',
 } as const
 
 export type StorageFailure = {

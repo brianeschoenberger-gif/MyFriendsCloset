@@ -24,7 +24,10 @@ async function addPhotoItem(name = 'Sunset midi dress') {
 }
 
 describe('My Friends Closet playable beta', () => {
-  beforeEach(() => window.localStorage.clear())
+  beforeEach(() => {
+    window.localStorage.clear()
+    window.history.replaceState({}, '', '/')
+  })
   afterEach(() => vi.restoreAllMocks())
 
   it('uploads a photo item and restores it from persistent storage', async () => {
@@ -50,6 +53,41 @@ describe('My Friends Closet playable beta', () => {
     expect(screen.queryByRole('heading', { name: 'Sunday sunglasses' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ivory linen set' })).toBeInTheDocument()
     expect(screen.getByText('Friend mode')).toBeInTheDocument()
+  })
+
+  it('shows a first-run onboarding guide and remembers when it is dismissed', async () => {
+    const user = userEvent.setup()
+    const first = render(<App />)
+
+    expect(screen.getByRole('heading', { name: 'Test the full owner-to-friend loop' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Dismiss guide' }))
+    expect(screen.queryByRole('heading', { name: 'Test the full owner-to-friend loop' })).not.toBeInTheDocument()
+    expect(window.localStorage.getItem('mfc-beta-onboarding-dismissed-v1')).toBe('true')
+
+    first.unmount()
+    render(<App />)
+    expect(screen.queryByRole('heading', { name: 'Test the full owner-to-friend loop' })).not.toBeInTheDocument()
+  })
+
+  it('copies an invite link for friend mode and honors the invite URL on load', async () => {
+    const user = userEvent.setup()
+    const clipboard = { writeText: vi.fn().mockResolvedValue(undefined) }
+    Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: clipboard })
+
+    const first = render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Preview Alex mode' }))
+    await user.click(screen.getByRole('button', { name: 'Copy invite link' }))
+
+    expect(clipboard.writeText).toHaveBeenCalledWith(`${window.location.origin}/?invite=MFC-BRIAN&mode=friend`)
+    expect(screen.getByText('Invite link copied')).toBeInTheDocument()
+
+    first.unmount()
+    window.localStorage.clear()
+    window.history.replaceState({}, '', '/?invite=MFC-BRIAN&mode=friend')
+    render(<App />)
+    expect(screen.getByText('Friend mode')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: "Brian's closet" })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Test the full owner-to-friend loop' })).not.toBeInTheDocument()
   })
 
   it('persists the full friend request and owner approval flow', async () => {

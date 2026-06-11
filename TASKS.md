@@ -33,7 +33,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Add Brian owner and Alex friend identities.
 - [x] Make current mode visible and switchable.
 - [x] Restrict friend view by item visibility.
-- [ ] Add a first-run onboarding explanation.
+- [x] Add a first-run onboarding explanation.
 
 ### Mobile photo upload
 
@@ -56,7 +56,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Create Friend View mode and demo invite code.
 - [x] Show only Friends/Borrowable items to Alex.
 - [x] Make Borrowable status and current identity obvious.
-- [ ] Add copy/share invite-link behavior.
+- [x] Add copy/share invite-link behavior.
 
 ### Borrow requests
 
@@ -90,3 +90,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 ## Rules
 
 Prioritize the owner upload -> friend request -> owner response loop over mock-only polish. After each increment, run checks, update project memory, and commit.
+
+## Newly surfaced follow-up
+
+- [ ] Investigate a sandbox-safe browser runtime for Playwright in this automation environment (`browserType.launch: spawn EPERM`), even though app-level E2E logic previously passed.
