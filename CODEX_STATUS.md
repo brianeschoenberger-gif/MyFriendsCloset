@@ -6,13 +6,13 @@ This file helps recurring Codex automation runs resume safely.
 
 Status: idle
 
-Last run: 2026-06-10
-Last completed task: Built and verified the first clickable Phase 1 prototype and project memory system.
+Last run: 2026-06-11
+Last completed task: Modularized the prototype and added automated coverage for four core interaction journeys.
 Current branch: main
-Last commit: `3ffcd04 Initialize My Friends Closet prototype`
-Checks: `npm.cmd run lint` passed; `npm.cmd run build` passed; desktop and 390px mobile browser QA passed with no console errors or horizontal overflow.
+Last commit: `Modularize prototype and add interaction tests`.
+Checks: `npm.cmd run lint` passed; `npm.cmd run test` passed (4 tests); `npm.cmd run build` passed; browser DOM and item-modal smoke checks passed with no console errors. Browser screenshot capture timed out after interaction verification.
 Blockers: None.
-Next recommended task: Extract App.tsx into focused component and mock-data modules, then add automated interaction tests for the core flows.
+Next recommended task: Add custom dates and a note to the borrow request flow, with validation and interaction coverage.
 Automation: `continue-my-friends-closet` is active and scheduled hourly in the local workspace.
 
 ## Notes for next 60-minute automation run

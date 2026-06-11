@@ -13,3 +13,6 @@ Track meaningful changes after each agentic loop.
 - Added an Event Closet view with members and shared pieces.
 - Added local CSS garment illustrations to avoid external image dependencies.
 - Verified desktop and mobile layouts plus add-item, borrowing, request approval, and styling interactions in-browser.
+- Split the prototype into typed domain models, mock-data fixtures, reusable closet UI, and focused page components.
+- Added Vitest and Testing Library coverage for adding items, changing visibility, borrowing, approving requests, and generating outfits.
+- Improved accessible names for modal controls, profile access, outfit items, and the borrowable-only toggle.

@@ -18,8 +18,8 @@ Build Phase 1: Lovable visual prototype with mock data.
 
 - [x] Create app shell with responsive navigation.
 - [x] Create reusable item, request, outfit, avatar, badge, button, and filter patterns.
-- [ ] Extract large App.tsx sections into focused component and data modules.
-- [ ] Add automated component and interaction tests.
+- [x] Extract large App.tsx sections into focused component and data modules.
+- [x] Add automated component and interaction tests.
 
 ### Landing and dashboard
 
