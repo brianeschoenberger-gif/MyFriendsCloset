@@ -85,6 +85,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Ensure lint, tests, and production build pass.
 - [x] Document local run and exact beta test flow.
 - [x] Add Vercel and Netlify deployment instructions.
+- [x] Add an automated GitHub Pages deployment workflow.
 - [ ] Deploy a hosted preview when a target account is available.
 
 ## Rules

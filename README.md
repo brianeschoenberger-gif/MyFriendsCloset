@@ -40,6 +40,12 @@ npm run build
 
 ## Deploy
 
+### GitHub Pages
+
+The repository includes `.github/workflows/deploy-pages.yml`. In GitHub, open **Settings > Pages** and set **Source** to **GitHub Actions**. Every push to `main` then builds and publishes the app at:
+
+`https://brianeschoenberger-gif.github.io/MyFriendsCloset/`
+
 ### Vercel
 
 Import the repository, use the Vite preset, set build command to `npm run build`, and output directory to `dist`.

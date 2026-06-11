@@ -17,7 +17,7 @@ Borrow request status: Dates, note, pending status, owner approval/decline, and 
 Mobile readiness: 390px friend/request flow was previously verified with no horizontal overflow or console errors; onboarding and invite-link changes are covered by automated DOM tests, but this run could not relaunch Playwright Chromium in the sandbox.
 Build status: `npm.cmd run lint` passed; 8 Vitest beta tests passed; `npm.cmd run build` passed; `npm.cmd run test:e2e` currently fails in this environment with `browserType.launch: spawn EPERM`.
 Blockers: Cross-device sharing requires a future hosted backend, and this automation environment currently blocks Playwright browser launch even after fixing the Windows `npm.cmd` server command.
-Next recommended task: Add sticky mobile save/request actions, then verify a hosted preview when a deployment target is available or a sandbox-safe Playwright runtime is configured.
+Next recommended task: Confirm the GitHub Pages workflow publishes successfully, then add sticky mobile save/request actions.
 Automation: `continue-my-friends-closet` is active and should prioritize playable beta tasks.
 
 ## Beta verification

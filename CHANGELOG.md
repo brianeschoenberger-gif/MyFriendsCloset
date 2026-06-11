@@ -34,3 +34,4 @@ Track meaningful changes after each agentic loop.
 - Added a persistent first-run beta guide that explains the Brian-to-Alex borrow loop.
 - Added copy/share invite-link actions plus a friend-mode deep link for `MFC-BRIAN`.
 - Updated Playwright's Windows web-server command to use `npm.cmd` instead of the blocked PowerShell shim.
+- Added a GitHub Actions workflow and repository-aware Vite base path for automatic GitHub Pages deployment.
