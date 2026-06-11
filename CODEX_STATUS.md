@@ -5,21 +5,25 @@ This file helps recurring Codex automation runs resume safely.
 ## Current status
 
 Status: idle
-
+Current priority: Playable Mobile Beta
 Last run: 2026-06-11
-Last completed task: Modularized the prototype and added automated coverage for four core interaction journeys.
 Current branch: main
-Last commit: `Modularize prototype and add interaction tests`.
-Checks: `npm.cmd run lint` passed; `npm.cmd run test` passed (4 tests); `npm.cmd run build` passed; browser DOM and item-modal smoke checks passed with no console errors. Browser screenshot capture timed out after interaction verification.
-Blockers: None.
-Next recommended task: Add custom dates and a note to the borrow request flow, with validation and interaction coverage.
-Automation: `continue-my-friends-closet` is active and scheduled hourly in the local workspace.
+Last commit: `Build playable mobile beta flow`
+Persistence choice: Versioned localStorage repository with uploaded images stored as data URLs; Supabase adapter planned.
+Auth/demo identity status: Brian owner and Alex friend switcher implemented and persisted.
+Photo upload status: Mobile camera/gallery input, preview, validation, persistent image, and full item fields implemented.
+Friend sharing status: Alex sees only Brian's Friends/Borrowable items; demo invite code is shown.
+Borrow request status: Dates, note, pending status, owner approval/decline, and persistence implemented.
+Mobile readiness: 390px friend/request flow verified with no horizontal overflow or console errors; camera upload persistence covered by automated browser-DOM tests.
+Build status: Lint passed; 4 beta interaction tests passed; production build passed; mobile browser verification passed.
+Blockers: Cross-device sharing requires a future hosted backend, but the complete single-device beta loop works locally.
+Next recommended task: Add client-side image compression and storage quota recovery, then implement copyable invite links.
+Automation: `continue-my-friends-closet` is active and should prioritize playable beta tasks.
 
-## Notes for next 60-minute automation run
+## Notes for next automation run
 
-- Read AGENTS.md, PRODUCT_SPEC.md, ROADMAP.md, TASKS.md, DECISIONS.md, CHANGELOG.md, and this file.
-- Check git status and recent commits.
-- If Status says running and changes are extremely recent, avoid overlap. Otherwise inspect and finish coherent prior work.
-- Continue the highest-value unfinished task.
-- Avoid duplicating completed work.
-- Commit completed work and leave this file at Status: idle.
+- Read all project memory files and inspect git status.
+- Prioritize persistent upload/share/borrow functionality over mock-only polish.
+- Keep the local fallback working when adding hosted services.
+- Run lint, tests, build, and mobile browser checks.
+- Update project memory, commit completed work, and leave Status: idle.

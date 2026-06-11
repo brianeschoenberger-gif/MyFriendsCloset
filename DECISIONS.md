@@ -43,3 +43,19 @@ Context: Session-local state now drives item creation, visibility, borrowing, ap
 Options considered: Unit-test state helpers only, browser-only regression checks, or interaction tests at the app boundary.
 Why: App-boundary tests protect the user journeys while allowing internal components and data modules to evolve.
 Consequences: New interactive flows should add focused tests, while browser checks remain responsible for responsive visual quality.
+
+### 2026-06-11 - Local-first persistence for the playable beta
+
+Decision: Persist demo identity, closet items, image data URLs, and borrow requests in versioned localStorage keys behind a small storage module.
+Context: The beta needs to work immediately without Supabase credentials while preserving a clear upgrade path to hosted auth, database, and storage.
+Options considered: Block on Supabase setup, use IndexedDB, or use localStorage with strict image limits.
+Why: localStorage is simple, synchronous, testable, and sufficient for a single-device playable beta. Data URLs make phone camera uploads survive refresh.
+Consequences: Data is browser-specific and constrained by storage quota. Images are limited to 5 MB; image compression and a Supabase repository are the next infrastructure steps.
+
+### 2026-06-11 - Demo identities before production auth
+
+Decision: Use Brian as owner and Alex as friend with a visible identity switcher.
+Context: The owner-to-friend sharing loop must be testable without account credentials or a second device.
+Options considered: Production auth now, separate demo routes, or an in-app identity switcher.
+Why: The switcher makes permissions, sharing, requests, and statuses directly testable while keeping the future auth boundary explicit.
+Consequences: The demo is not secure authentication. Hosted beta work must replace identity selection with verified sessions.

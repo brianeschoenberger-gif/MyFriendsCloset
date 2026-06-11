@@ -2,68 +2,79 @@
 
 ## Current priority
 
-Build Phase 1: Lovable visual prototype with mock data.
+Build Phase 1: Playable Mobile Beta.
 
-## Task queue
+The app must work on a phone well enough that the owner can add real clothing photos and a friend can view borrowable items and request them.
 
-### Setup
+## Critical beta tasks
 
-- [x] Inspect existing repo structure.
-- [x] Identify framework and package manager.
-- [x] Ensure app installs and builds.
-- [x] Add styling system.
-- [x] Create mock data models and seed data.
+### Persistence and app state
 
-### App foundation
+- [x] Inspect existing data/state architecture.
+- [x] Choose localStorage data URLs as the credential-free beta fallback.
+- [x] Document the persistence decision.
+- [x] Create a storage abstraction for identity, closet items, and requests.
+- [x] Persist user-created items and borrow requests after refresh.
+- [ ] Add storage quota handling and image compression.
+- [ ] Add a Supabase repository implementation behind the abstraction.
 
-- [x] Create app shell with responsive navigation.
-- [x] Create reusable item, request, outfit, avatar, badge, button, and filter patterns.
-- [x] Extract large App.tsx sections into focused component and data modules.
-- [x] Add automated component and interaction tests.
+### Demo auth / identity
 
-### Landing and dashboard
+- [x] Add Brian owner and Alex friend identities.
+- [x] Make current mode visible and switchable.
+- [x] Restrict friend view by item visibility.
+- [ ] Add a first-run onboarding explanation.
 
-- [x] Build a high-impact product hero.
-- [x] Build dashboard summary cards and closet stats.
-- [x] Show pending requests and recent friend items.
-- [x] Add Style Me CTA and event closet preview.
-- [ ] Add a separate public landing/onboarding route.
+### Mobile photo upload
 
-### My Closet and Add Item
+- [x] Add mobile image upload/camera capture input.
+- [x] Show image preview before saving.
+- [x] Persist uploaded image with the item.
+- [x] Validate file type, size, and missing-image errors.
+- [ ] Compress large images before local persistence.
 
-- [x] Build closet grid with category filters and item badges.
-- [x] Add item detail view and visibility controls.
-- [x] Build polished add item form and save to mock state.
-- [ ] Add richer filters and a true empty state.
-- [ ] Add edit/delete actions for mock items.
+### Closet item CRUD
 
-### Friends and borrowing
+- [x] Save item details, visibility, tags, and notes.
+- [x] Show persisted owner items and item details.
+- [x] Allow visibility changes and item deletion.
+- [ ] Add edit flow for item details and photo.
+- [ ] Add richer visibility/category filters and empty states.
 
-- [x] Build friend list and shared closet grid.
-- [x] Add borrowable-only filter and item detail.
-- [x] Add request-to-borrow action.
-- [x] Build incoming/outgoing requests with approve/decline actions.
-- [ ] Add custom dates and a note to the borrow request flow.
+### Friend sharing
 
-### Style Me and events
+- [x] Create Friend View mode and demo invite code.
+- [x] Show only Friends/Borrowable items to Alex.
+- [x] Make Borrowable status and current identity obvious.
+- [ ] Add copy/share invite-link behavior.
 
-- [x] Build occasion, vibe, location, and closet source prompt.
-- [x] Generate three mock outfit suggestions with explanations.
-- [x] Highlight borrowed friend items.
-- [x] Build Palm Springs event overview, members, and shared items.
-- [ ] Add outfit voting and comments.
-- [ ] Add create-event flow.
+### Borrow requests
 
-### Polish
+- [x] Alex can request a Borrowable item with dates and a note.
+- [x] Brian can view, approve, or decline incoming requests.
+- [x] Alex can see persisted request status.
+- [ ] Prevent unavailable/approved date conflicts.
+- [ ] Add returned status action.
 
-- [x] Make main flows mobile responsive.
-- [x] Add realistic local CSS-based item visuals.
-- [x] Ensure main navigation has no broken destinations.
-- [x] Run visual browser QA and fix any layout regressions.
-- [ ] Improve keyboard focus styles and accessibility labels.
-- [ ] Add loading/empty states and reduced-motion support.
-- [ ] Add screenshots to README.
+### Style Me
+
+- [x] Use saved owner items in mock outfit suggestions.
+- [ ] Add an empty state when fewer than three saved pieces exist.
+- [ ] Improve item selection by category and occasion tags.
+
+### Mobile usability
+
+- [x] Test the complete beta flow at approximately 390px in a real browser.
+- [x] Keep main controls thumb-friendly and avoid horizontal scrolling in existing layouts.
+- [ ] Add sticky save/request actions and reduced-motion support.
+
+### Deployability
+
+- [x] Ensure lint, tests, and production build pass.
+- [x] Document local run and exact beta test flow.
+- [x] Add Vercel and Netlify deployment instructions.
+- [ ] Deploy a hosted preview when a target account is available.
 
 ## Rules
 
-After every meaningful task: run checks, fix errors, update this file, update CHANGELOG.md and CODEX_STATUS.md, and commit changes.
+Prioritize the owner upload -> friend request -> owner response loop over mock-only polish. After each increment, run checks, update project memory, and commit.

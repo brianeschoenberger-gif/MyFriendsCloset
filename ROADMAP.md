@@ -1,29 +1,49 @@
 # ROADMAP.md
 
-## Phase 1: Lovable visual prototype
+## Phase 1: Playable Mobile Beta
 
-Goal: Build a polished, clickable app using mock data.
+Goal: Create a mobile-first beta where real users can add clothing photos, persist closet items, share borrowable items, and submit borrow requests.
 
-Deliverables: landing page, app shell, dashboard, My Closet, Add Item, Friends' Closets, Borrow Requests, Style Me, Event Closet, responsive styling, and mock data.
+Deliverables:
+- Mobile-first UI
+- Demo owner/friend identity flow
+- Real item creation and photo upload/capture
+- Persistent closet items and images
+- Friend/demo sharing with visibility rules
+- Persistent borrow request and approval flow
+- Style Me using saved items
+- README testing and deployment instructions
 
 Success criteria:
 - App runs locally and builds without errors.
-- A new user understands the product in 60 seconds.
-- Main flows are clickable.
-- UI feels social, visual, and polished.
+- Owner can add a real clothing photo and see it after refresh.
+- Friend mode sees only shared items and can request borrowable items.
+- Owner can approve or decline persisted requests.
+- Core flow is usable at phone width.
 
-## Phase 2: Real data foundation
+## Phase 2: Hosted beta foundation
 
-Auth, database schema, closet item CRUD, friend relationships, persistent borrow requests, and image storage.
+- Production authentication
+- Supabase or Firebase database and storage
+- Better friend invites and share links
+- Hosted preview deployment
+- Data migration from local demo storage
 
-## Phase 3: AI features
+## Phase 3: AI and automation
 
-AI-generated item tags, outfit suggestions, event-based styling, friend closet recommendations, and explanations.
+- AI item tagging and background removal
+- Real outfit generation using saved closets
+- Event and weather-aware suggestions
+- Notifications and return reminders
 
 ## Phase 4: Social and retention
 
-Style Me requests, friend voting, comments, event closets, notifications, and return reminders.
+- Friend voting and comments
+- Shared event closets
+- Better invite and group management
 
 ## Phase 5: Monetization experiments
 
-Freemium limits, group event upgrades, affiliate shopping suggestions, and optional paid AI styling.
+- Freemium limits
+- Group event upgrades
+- Optional paid AI styling

@@ -13,9 +13,9 @@ Core positioning:
 ## Product principles
 
 1. Make the app visual, social, and fun.
-2. Prioritize a lovable demo before complex backend work.
+2. Prioritize a playable mobile beta before mock-only polish or backend complexity.
 3. Build in small, testable increments.
-4. Use mock data first unless backend infrastructure already exists.
+4. Persist user-created items and borrow requests. Mock data may support the demo story but cannot replace the core beta flow.
 5. Avoid marketplace, payment, shipping, damage-dispute, or insurance features for now.
 6. Every feature should support closet sharing, borrowing, styling, or event outfit planning.
 7. Make reasonable product decisions without asking the human unless truly blocked.
@@ -61,6 +61,19 @@ If no app exists, use:
 
 If an app already exists, follow the existing stack and conventions.
 
+## Current priority: playable mobile beta
+
+The project priority changed from a mock visual prototype to a playable mobile beta. Do not spend a run only improving mock pages until these work:
+
+- Mobile photo upload or camera capture
+- Persistent closet items after refresh
+- Owner and friend demo identities
+- Private, friends, and borrowable visibility
+- Persistent borrow requests with owner approval or decline
+- Mobile usability, passing build, and exact README test instructions
+
+The current local beta uses a storage abstraction backed by `localStorage` and image data URLs. Keep this functional fallback when adding Supabase or another hosted backend.
+
 ## Core pages for Phase 1
 
 Build these before backend complexity:
@@ -77,7 +90,7 @@ Build these before backend complexity:
 
 ## MVP data models
 
-Use mock data initially.
+Use persistent data for user-created beta content. Seed data may remain for demonstration.
 
 User:
 - id

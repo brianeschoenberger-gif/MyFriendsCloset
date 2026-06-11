@@ -16,3 +16,10 @@ Track meaningful changes after each agentic loop.
 - Split the prototype into typed domain models, mock-data fixtures, reusable closet UI, and focused page components.
 - Added Vitest and Testing Library coverage for adding items, changing visibility, borrowing, approving requests, and generating outfits.
 - Improved accessible names for modal controls, profile access, outfit items, and the borrowable-only toggle.
+- Pivoted the project priority from mock prototype to playable mobile beta.
+- Added versioned local persistence for demo identity, closet items, uploaded photos, and borrow requests.
+- Added Brian owner and Alex friend modes with visibility-enforced friend sharing.
+- Replaced the add-item placeholder with mobile camera/gallery upload, preview, validation, full item details, and deletion.
+- Added persisted borrow requests with dates, notes, owner approval/decline, and friend-visible status.
+- Updated Style Me to pull from the persisted owner closet.
+- Documented exact phone testing plus Vercel and Netlify deployment settings.
