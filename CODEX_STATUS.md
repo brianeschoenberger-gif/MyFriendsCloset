@@ -13,6 +13,7 @@ Last commit: `3ffcd04 Initialize My Friends Closet prototype`
 Checks: `npm.cmd run lint` passed; `npm.cmd run build` passed; desktop and 390px mobile browser QA passed with no console errors or horizontal overflow.
 Blockers: None.
 Next recommended task: Extract App.tsx into focused component and mock-data modules, then add automated interaction tests for the core flows.
+Automation: `continue-my-friends-closet` is active and scheduled hourly in the local workspace.
 
 ## Notes for next 60-minute automation run
 
