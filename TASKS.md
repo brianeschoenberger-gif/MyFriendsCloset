@@ -6,6 +6,16 @@ Build Phase 1: Playable Mobile Beta.
 
 The app must work on a phone well enough that the owner can add real clothing photos and a friend can view borrowable items and request them.
 
+## Quality harness tasks
+
+- [x] Create BETA_CHECKLIST.md.
+- [x] Score the current app and add evidence for each category.
+- [x] Identify and improve Style Me as the lowest-scoring product area.
+- [x] Prioritize the next task based on checklist evidence.
+- [x] Add a README section called "How to test the playable beta."
+- [x] Add a Playwright end-to-end test for owner upload -> refresh -> sharing -> request -> approval -> refresh.
+- [x] Add a documented and completed 390px mobile manual test.
+
 ## Critical beta tasks
 
 ### Persistence and app state
@@ -59,7 +69,9 @@ The app must work on a phone well enough that the owner can add real clothing ph
 ### Style Me
 
 - [x] Use saved owner items in mock outfit suggestions.
-- [ ] Add an empty state when fewer than three saved pieces exist.
+- [x] Add stateful occasion, vibe, and closet-source controls.
+- [x] Add an empty state when fewer than three saved pieces exist.
+- [x] Label owned and borrowed sources in each suggestion.
 - [ ] Improve item selection by category and occasion tags.
 
 ### Mobile usability

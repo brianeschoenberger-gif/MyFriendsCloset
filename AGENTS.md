@@ -74,6 +74,22 @@ The project priority changed from a mock visual prototype to a playable mobile b
 
 The current local beta uses a storage abstraction backed by `localStorage` and image data URLs. Keep this functional fallback when adding Supabase or another hosted backend.
 
+## Beta verification rule
+
+The agent must use BETA_CHECKLIST.md as the quality gate for the playable mobile beta.
+
+At the end of each meaningful run:
+
+1. Update BETA_CHECKLIST.md scores.
+2. Include evidence for each score.
+3. Do not give a score of 2 unless the feature was verified by running the app, testing the flow, or adding an automated test.
+4. Prioritize the lowest-scoring critical beta category before adding visual polish.
+5. If the app builds but the core beta flow cannot be tested, document exactly why.
+
+Scores must be tied to evidence, not subjective self-rating. The most important flow is:
+
+Owner uploads item -> item persists -> owner marks borrowable -> friend sees item -> friend requests item -> owner approves/declines -> request persists.
+
 ## Core pages for Phase 1
 
 Build these before backend complexity:

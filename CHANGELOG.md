@@ -23,3 +23,7 @@ Track meaningful changes after each agentic loop.
 - Added persisted borrow requests with dates, notes, owner approval/decline, and friend-visible status.
 - Updated Style Me to pull from the persisted owner closet.
 - Documented exact phone testing plus Vercel and Netlify deployment settings.
+- Added BETA_CHECKLIST.md as an evidence-based 18-point quality gate.
+- Added a 390px Playwright E2E covering image upload, refresh persistence, visibility, friend request, owner approval, and status persistence.
+- Made Style Me occasion, vibe, and closet-source controls stateful.
+- Added verified insufficient-closet guidance and explicit owned-versus-borrowed outfit labels.

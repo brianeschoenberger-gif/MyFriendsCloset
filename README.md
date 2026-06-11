@@ -11,7 +11,7 @@ npm run dev -- --host
 
 Open the Vite URL on the computer. To test on a phone connected to the same Wi-Fi, open the Network URL printed by Vite. Windows PowerShell users with script execution disabled can use `npm.cmd`.
 
-## How to test the beta
+## How to test the playable beta
 
 1. Start in **Brian / Owner mode**.
 2. Open **My closet** and choose **Add from camera**.
@@ -31,8 +31,11 @@ Data is saved in browser `localStorage`, including uploaded photos as data URLs.
 ```bash
 npm run lint
 npm run test
+npm run test:e2e
 npm run build
 ```
+
+`npm run test:e2e` launches the app at a 390x844 viewport and automates the complete persisted beta flow with a stable fixture image. Install the browser runtime once with `npx playwright install chromium` if Playwright reports that Chromium is missing.
 
 ## Deploy
 

@@ -59,3 +59,11 @@ Context: The owner-to-friend sharing loop must be testable without account crede
 Options considered: Production auth now, separate demo routes, or an in-app identity switcher.
 Why: The switcher makes permissions, sharing, requests, and statuses directly testable while keeping the future auth boundary explicit.
 Consequences: The demo is not secure authentication. Hosted beta work must replace identity selection with verified sessions.
+
+### 2026-06-11 - Evidence-based beta gate and browser E2E
+
+Decision: Score beta readiness in BETA_CHECKLIST.md and require a 390px Playwright test for the complete persisted owner/friend flow.
+Context: Passing builds and component tests alone do not prove that upload, refresh, identity switching, sharing, and approval work together in a phone-sized browser.
+Options considered: Continue manual-only checks, rely on Testing Library, or add Playwright with a stable image fixture.
+Why: Playwright provides repeatable evidence across the real browser persistence boundary while the checklist prevents unverified work from being marked complete.
+Consequences: Browser installation is required once in each environment. Future beta changes must keep both Vitest and Playwright suites passing and update checklist evidence.

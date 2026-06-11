@@ -1,7 +1,8 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { StylePage } from './components/Pages'
 
 function primaryNav() {
   return within(screen.getByRole('navigation', { name: 'Primary navigation' }))
@@ -79,8 +80,20 @@ describe('My Friends Closet playable beta', () => {
     const user = userEvent.setup()
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Style me for Saturday' }))
+    await user.click(screen.getByRole('button', { name: 'Romantic' }))
     await user.click(screen.getByRole('button', { name: 'Build my looks' }))
     expect(screen.getByRole('heading', { name: 'Your looks are ready' })).toBeInTheDocument()
+    expect(screen.getByText(/Romantic ideas for Rooftop birthday dinner/)).toBeInTheDocument()
     expect(screen.getAllByText(/LOOK 0/)).toHaveLength(3)
+  })
+
+  it('does not invent outfits when the saved closet is too small', async () => {
+    const user = userEvent.setup()
+    render(<StylePage visible generate={vi.fn()} onItem={vi.fn()} items={[]} />)
+
+    expect(screen.getByRole('heading', { name: 'Add 3 more pieces to get styled' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Your looks are ready' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'A little bold' }))
+    expect(screen.getByRole('button', { name: 'A little bold' })).toHaveAttribute('aria-pressed', 'true')
   })
 })
