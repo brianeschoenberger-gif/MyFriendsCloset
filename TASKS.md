@@ -88,6 +88,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Add an empty state when fewer than three saved pieces exist.
 - [x] Build outfits around a selected photographed garment.
 - [x] Swap one photographed garment while preserving the rest of the outfit and the selected anchor.
+- [x] Mark a saved look as worn today and persist its wear history locally.
 - [x] Offer a reviewable ChatGPT prompt and validate returned outfits for local save.
 - [x] Label owned and borrowed sources in each suggestion.
 - [ ] Improve item selection by category and occasion tags.

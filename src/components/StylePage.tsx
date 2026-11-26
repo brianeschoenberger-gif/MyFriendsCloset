@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Heart, Plus, Shirt, Sparkles, Users } from 'lucide-react'
+import { Check, Heart, Plus, Shirt, Sparkles, Users } from 'lucide-react'
 import { friendItems, initialItems } from '../data/mockData'
 import { storageKeys, usePersistentState } from '../lib/storage'
 import { closetGaps, conditions, photographedPieces, suggestLooks, vibes, type Conditions, type StylePreferences, type Vibe } from '../lib/stylist'
@@ -8,6 +8,7 @@ import { ItemVisual } from './ClosetUI'
 import { AILookPanel } from './AILookPanel'
 import { SwapRack } from './SwapRack'
 import { swapLook } from '../lib/swapLook'
+import { dateLabel, displayWearDate, toggleWear } from '../lib/wearLog'
 import { hasOutfitBase } from '../lib/aiLookExchange'
 
 type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean }
@@ -32,6 +33,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
   const validSaved = saved.filter((look) => resolve(look).length === look.itemIds.length)
   const visibleLooks = (result?.looks ?? []).filter((look) => resolve(look).length === look.itemIds.length)
   const selectedOccasion = occasion.trim() || 'Everyday'
+  const today = dateLabel(new Date())
   const currentPreferences = { occasion: selectedOccasion, vibe, conditions: condition }
   const aiReady = hasOutfitBase(realPieces, anchor?.id)
 
@@ -44,6 +46,10 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
 
   function toggleSave(look: OutfitLook) {
     setSaved((current) => current.some((entry) => entry.id === look.id) ? current.filter((entry) => entry.id !== look.id) : [look, ...current].slice(0, 60))
+  }
+
+  function markWorn(look: OutfitLook) {
+    setSaved((current) => current.map((item) => item.id === look.id ? { ...item, wornOn: toggleWear(item.wornOn, today) } : item))
   }
 
   return <section className="style-page">
@@ -72,7 +78,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
       setShowSaved(false)
     }} />}
     <div className="outfits page-container" aria-live="polite">
-      {showSaved && <><div className="section-heading"><p className="eyebrow">Only in this browser</p><h2>Saved looks</h2></div>{validSaved.length ? <div className="outfit-grid">{validSaved.map((look, i) => <OutfitCard key={look.id} index={i} look={look} items={resolve(look)} onItem={onItem} onSave={toggleSave} isSaved />)}</div> : <p>Save an outfit to come back to it later.</p>}</>}
+      {showSaved && <><div className="section-heading"><p className="eyebrow">Only in this browser</p><h2>Saved looks</h2></div>{validSaved.length ? <div className="outfit-grid">{validSaved.map((look, i) => <OutfitCard key={look.id} index={i} look={look} items={resolve(look)} onItem={onItem} onSave={toggleSave} isSaved onWorn={() => markWorn(look)} today={today} />)}</div> : <p>Save an outfit to come back to it later.</p>}</>}
       {!showSaved && result && !visibleLooks.length && <div className="empty-state"><Shirt /><h3>Your closet needs a base outfit</h3><p>{result.gaps} Style Me won’t substitute pieces you haven’t saved. You can also turn on sample pieces to try the flow.</p><button type="button" className="secondary-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div>}
       {!showSaved && result && !!visibleLooks.length && <>
         <div className="section-heading"><p className="eyebrow">{result.preferences.vibe} ideas for {result.preferences.occasion}{result.demo ? ' · sample pieces enabled' : ''}{result.ai ? ' · imported from ChatGPT' : ''}</p><h2>{result.ai ? 'Your imported looks are ready' : 'Your looks are ready'}</h2></div>
@@ -95,10 +101,12 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
   </section>
 }
 
-function OutfitCard({ index, look, items, onItem, onSave, isSaved, swaps }: { index: number; swaps?: ReactNode; look: OutfitLook; items: ClosetItem[]; onItem: (item: ClosetItem) => void; onSave: (look: OutfitLook) => void; isSaved: boolean }) {
+function OutfitCard({ index, look, items, onItem, onSave, isSaved, swaps, onWorn, today }: { index: number; swaps?: ReactNode; onWorn?: () => void; today?: string; look: OutfitLook; items: ClosetItem[]; onItem: (item: ClosetItem) => void; onSave: (look: OutfitLook) => void; isSaved: boolean }) {
   const savedPieces = items.filter((item) => item.ownerId === 'owner' && Boolean(item.imageData)).length
   const friendPieces = items.length - items.filter((item) => item.ownerId === 'owner').length
   const samples = items.length - savedPieces
+  const wornToday = Boolean(today && look.wornOn?.includes(today))
+  const lastWorn = look.wornOn?.[0] && displayWearDate(look.wornOn[0])
   return <article className="outfit-card">
     <span className="outfit-number">LOOK {String(index + 1).padStart(2, '0')}{look.source === 'ai-import' ? ' · IMPORTED AI' : look.source === 'custom' ? ' · CUSTOM' : ''}</span>
     <div className="outfit-items outfit-tiles">{items.map((item) => <button key={item.id} onClick={() => onItem(item)} aria-label={`View ${item.name}`}><ItemVisual item={item} compact /><span>{item.name}</span></button>)}</div>
@@ -109,6 +117,10 @@ function OutfitCard({ index, look, items, onItem, onSave, isSaved, swaps }: { in
       {!!friendPieces && <small><Users size={14} /> Demo loan, not a real request</small>}
     </div>
     {swaps}
+    {onWorn && <div className="wear-actions">
+      <button className="secondary-button" onClick={onWorn} aria-pressed={wornToday}><Check size={16} /> {wornToday ? 'Wore it today' : 'Mark worn today'}</button>
+      {lastWorn && <span role="status">Last worn {wornToday ? 'today' : lastWorn} · {look.wornOn!.length} {look.wornOn!.length === 1 ? 'day' : 'days'} logged</span>}
+    </div>}
     <button className="secondary-button" onClick={() => onSave(look)} aria-pressed={isSaved}><Heart size={16} fill={isSaved ? 'currentColor' : 'none'} /> {isSaved ? 'Remove saved look' : 'Save this look'}</button>
   </article>
 }

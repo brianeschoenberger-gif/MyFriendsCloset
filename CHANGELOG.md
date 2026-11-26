@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Added local wear history for saved looks. Users can mark or undo today’s wear and see the last worn date after reload.
+
 - Closed the local lending lifecycle: date validation, overlapping-approval checks, and an owner-only returned state that persists for both demo roles.
 
 - Made the home screen lead with a real wardrobe, a six-piece setup, and an outfit-ready state. Clearly separated sample clothes and the local lending demo.

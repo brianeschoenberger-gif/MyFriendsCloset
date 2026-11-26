@@ -138,3 +138,5 @@ Edit a look: eight real Chromium flows passed, including switching only a pair o
 Home quick start: the fixture checks that samples count as zero photos and the first-photo action opens the batch importer. Physical six-garment setup is still the next usability test.
 
 Loan lifecycle: 31 Vitest tests and all eight Chromium flows passed. The mobile loan test checks a backwards date, then submits a valid request, approves, marks returned, reloads, and verifies both demo identities see the saved status. Unit coverage checks overlapping, flexible and non-overlapping date windows. There are no real cross-device loans.
+
+Wear history: 32 Vitest tests, the production build, and eight Chromium flows passed; a swapped look can be saved, marked worn, reopened and toggled off. The app did not send wear dates off-device.

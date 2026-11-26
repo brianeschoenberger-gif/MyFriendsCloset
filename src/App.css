@@ -128,3 +128,7 @@ body:has(.modal-backdrop) { overflow: hidden; }
 }
 
 .status.returned { color: var(--muted); }
+
+.wear-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem 0; }
+.wear-actions > span { font-size: .875rem; color: var(--muted); }
+.wear-actions button[aria-pressed="true"] { background: #e4e8d9; border-color: var(--olive); }
