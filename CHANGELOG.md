@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Tested a non-deployed, consent-gated request ceiling for future hosted styling. Ordinary browser roles cannot call it; per-account and project ceilings were exercised with synthetic users. The public app made no model calls.
+
 - Right after adding a wearable base, the closet suggests styling your photos; otherwise it tells you what kind of piece is missing.
 
 - Added a non-deployed private photo policy draft. Tests applied it to isolated metadata for two synthetic owners, verified a private bucket is mandatory, and showed an older broad policy could not leak these rows. No photo files or hosted storage were involved.

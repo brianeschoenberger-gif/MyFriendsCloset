@@ -128,6 +128,31 @@ try {
   await db.exec('reset role; set role anon')
   assert.deepEqual((await db.query(visiblePhotos, [privateBucket])).rows, [])
   console.log('Verified future image metadata policies: private bucket required, two isolated owners, no anonymous access even with an older broad policy.')
+  await db.exec('reset role; create role service_role noinherit')
+  await db.exec(await readFile(new URL('./metadata-budget.sql', import.meta.url), 'utf8'))
+  const reserve = 'select public.reserve_closet_styling_call($1) as allowed'
+  await asAccount(accountA)
+  await assert.rejects(db.query(reserve, [accountA]), denied)
+  await assert.rejects(db.query('select * from public.closet_styling_usage'), denied)
+  await db.exec('reset role; set role service_role')
+  assert.deepEqual((await db.query(reserve, [accountA])).rows, [{ allowed: false }])
+  await asAccount(accountA)
+  await db.query('update public.closet_styling_consent set enabled = true where owner_id = $1', [accountA])
+  await db.exec('reset role; set role service_role')
+  for (let i = 0; i < 5; i += 1) {
+    assert.deepEqual((await db.query(reserve, [accountA])).rows, [{ allowed: true }])
+  }
+  assert.deepEqual((await db.query(reserve, [accountA])).rows, [{ allowed: false }])
+  await db.exec('reset role')
+  await db.query('update public.closet_styling_global_usage set allowed_calls = 79')
+  await asAccount(accountB)
+  await db.query('update public.closet_styling_consent set enabled = true where owner_id = $1', [accountB])
+  await db.exec('reset role; set role service_role')
+  assert.deepEqual((await db.query(reserve, [accountB])).rows, [{ allowed: true }])
+  assert.deepEqual((await db.query(reserve, [accountB])).rows, [{ allowed: false }])
+  await db.exec('reset role')
+  assert.deepEqual((await db.query('select allowed_calls from public.closet_styling_global_usage')).rows, [{ allowed_calls: 80 }])
+  console.log('Verified draft model budget: consent gate, service-only request reservation, owner cap and independent global ceiling.')
 } finally {
   await db.close()
 }
