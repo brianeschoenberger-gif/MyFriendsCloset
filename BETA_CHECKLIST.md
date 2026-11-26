@@ -55,9 +55,10 @@ Evidence: Automated Testing Library coverage verifies owner/friend switching, pr
 - [x] Image preview appears before save.
 - [x] Saved image appears in My Closet.
 - [x] Image survives refresh using the chosen persistence layer.
+- [x] Batch uploads can be reviewed and all save privately in one action.
 
 Score: 2/2
-Evidence: Vitest uses a real File object and verifies refresh persistence. Playwright generates and uploads a 2400x1800 PNG, then proves it was stored as a 1600x1200 JPEG before completing the persisted beta flow. The input uses `accept="image/*"` and `capture="environment"`; physical-device camera behavior remains browser-dependent.
+Evidence: Vitest uses File objects and verifies one atomic multi-photo save, unique IDs, private visibility after switching to the friend demo, and persistence after remount. Playwright generates and uploads a 2400x1800 PNG, then proves it was stored as a 1600x1200 JPEG before completing the persisted beta flow. The input uses `accept="image/*"` and `capture="environment"`; physical-device camera behavior remains browser-dependent.
 
 ### Closet item persistence
 
@@ -97,14 +98,14 @@ Evidence: Vitest and Playwright submit dates and a note, switch identities, appr
 
 ### Style Me
 
-- [x] Style Me uses real saved closet items, not only static mock data.
-- [x] User can select occasion and vibe in a stateful way.
-- [x] App generates 3 outfit suggestions.
-- [x] App handles insufficient items gracefully.
-- [x] App labels friend/borrowable items.
+- [x] Style uses only the owner's photographed items by default.
+- [x] Occasion, vibe, conditions, and item metadata change the results.
+- [x] Style offers up to three combinations with explanations, or useful guidance when pieces are missing.
+- [x] Saved looks survive reload; optional samples and the same-browser demo are explicit.
+- [x] Friend mode cannot see the owner's private stylist or private items.
 
-Score: 2/2
-Evidence: Suggestions use persisted items, stateful occasion/vibe/source controls, and explicit owned-versus-borrowed labels. Vitest verifies vibe state and the upload-more state when fewer than three pieces exist.
+Score: 2/2 for the local feature.
+Evidence: Vitest verifies owner-only photo filtering, matching by tags and conditions, owner-only access, save/reload, photo editing, and safe handling of failed storage writes. This is not AI or cross-device verification.
 
 ### Deployability
 
@@ -122,4 +123,6 @@ Total possible score: 18 points.
 
 Current score: 18/18
 Critical blockers: None for the single-device playable beta. Cross-device sharing remains local-only until a hosted backend is added.
-Next highest-impact task: Add sticky mobile save/request actions and run the physical-device camera/quota flow against the GitHub Pages deployment.
+Next highest-impact task: Try a six-piece capsule and a real styling occasion on a physical iPhone. Test capture permissions, time to a useful look, and iOS storage behavior.
+
+Nov 26 verification: lint, 14 Vitest tests, and production build passed. The new 390px batch test is present, but browser verification for this run was blocked by the unavailable local Chromium binary. Earlier Playwright coverage applies to the previous build.

@@ -60,3 +60,12 @@ export type Friend = {
   count: number
   color: string
 }
+
+export type OutfitLook = {
+  id: string
+  title: string
+  itemIds: number[]
+  explanation: string
+  occasion: string
+  vibe: string
+}

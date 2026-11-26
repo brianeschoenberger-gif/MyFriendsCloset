@@ -2,7 +2,15 @@
 
 Track meaningful changes after each agentic loop.
 
-## Unreleased
+## Photo-first beta · 2026-11-26
+
+- Added batch intake for up to 12 garment photos, with removable previews, required categories, optional names/colors, and one atomic private save.
+- Made the lending and link UI explicit about same-browser simulation; photos are not in the demo link.
+- Added regression coverage for batch import, persistence, and privacy.
+
+- Replaced the sample-first Style screen with photo-grounded rules matching, vibe/occasion/conditions controls, match explanations, and local saved looks.
+- Made sample outfits opt-in and clearly labeled; hid owner-only styling from the friend demo.
+- Added camera/library choice, closet category filters, and photo/details edits without changing the lending flow.
 
 - Initialized a Vite, React, TypeScript, and Tailwind CSS project.
 - Added project planning and recurring-agent memory files.

@@ -2,6 +2,14 @@
 
 Document product and technical decisions here.
 
+### 2026-11-25 - Real-photo stylist before AI or social growth
+
+Decision: Style only photographed owner items by default. Suggestions are explainable matching rules, and sample content is opt-in. Preserve same-browser lending. No account, image upload service, or public deployment is part of this increment.
+
+Why: Prove a useful outfit from a small closet before paying for a model or asking people to upload a wardrobe. Manual controls are the baseline for optional automated tagging and real outfit ranking.
+
+Consequences: Looks are tied to item IDs in browser storage. When an item is deleted, incomplete saved looks are suppressed. Browser-local roles are a demo boundary, not authentication. A hosted beta must enforce sharing server-side and migrate data safely.
+
 ## Decision format
 
 ### YYYY-MM-DD - Decision title

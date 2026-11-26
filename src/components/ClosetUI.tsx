@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
-import { Camera, Heart, Trash2, X } from 'lucide-react'
-import { prepareImageForStorage, type ImageProcessingResult } from '../lib/storage'
+import { Camera, Heart, Pencil, Trash2, X } from 'lucide-react'
+import { prepareImageForStorage } from '../lib/storage'
 import type { BorrowRequest, ClosetItem, Identity, Visibility } from '../types'
 
 export function ItemVisual({ item, compact = false }: { item: ClosetItem; compact?: boolean }) {
@@ -11,7 +11,7 @@ export function ItemVisual({ item, compact = false }: { item: ClosetItem; compac
 export function ItemCard({ item, onClick }: { item: ClosetItem; onClick: () => void }) {
   return <button className="item-card" onClick={onClick}>
     <div className="visual-wrap"><ItemVisual item={item} /><span className={`visibility-badge ${item.visibility.toLowerCase()}`}>{item.visibility === 'Borrowable' ? 'Available to borrow' : item.visibility}</span><Heart className="heart" size={20} /></div>
-    <div className="item-info"><div><h3>{item.name}</h3><p>{item.brand || item.category} / Size {item.size}</p></div>{item.owner !== 'Brian' && <span className="owner">{item.owner.slice(0, 1)}</span>}</div>
+    <div className="item-info"><div><h3>{item.name}</h3><p>{item.brand || item.category}{item.size ? ` / Size ${item.size}` : ''}</p></div>{item.owner !== 'Brian' && <span className="owner">{item.owner.slice(0, 1)}</span>}</div>
   </button>
 }
 
@@ -19,16 +19,16 @@ export function PageHeading({ eyebrow, title, subtitle, children }: { eyebrow: s
   return <div className="page-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p>{subtitle}</p></div>{children}</div>
 }
 
-export function ItemModal({ item, own, close, updateVisibility, requestItem, deleteItem }: { item: ClosetItem; own: boolean; close: () => void; updateVisibility: (item: ClosetItem, visibility: Visibility) => void; requestItem: (item: ClosetItem) => void; deleteItem: (item: ClosetItem) => void }) {
-  return <div className="modal-backdrop" onMouseDown={close}><div className="item-modal" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={close} aria-label="Close item details"><X /></button><ItemVisual item={item} /><div className="modal-content"><p className="eyebrow">{own ? 'From your closet' : `From ${item.owner}'s closet`}</p><h2>{item.name}</h2><p>{item.brand || 'No brand'} / {item.category} / Size {item.size}</p>{item.notes && <p className="item-notes">{item.notes}</p>}{own ? <><h4>Who can see this?</h4><div className="visibility-options">{(['Private', 'Friends', 'Borrowable'] as Visibility[]).map((option) => <button key={option} className={item.visibility === option ? 'selected' : ''} onClick={() => updateVisibility(item, option)}>{option}</button>)}</div><button className="danger-button" onClick={() => deleteItem(item)}><Trash2 size={16} /> Delete item</button></> : <><div className="lender-note"><span className="avatar">{item.owner.slice(0, 1)}</span><p><strong>{item.owner} says:</strong><br />Shared with close friends.</p></div>{item.visibility === 'Borrowable' && <button className="primary-button full" onClick={() => requestItem(item)}>Request to borrow</button>}</>}</div></div></div>
+export function ItemModal({ item, own, canRequest, close, updateVisibility, requestItem, deleteItem, editItem }: { item: ClosetItem; own: boolean; canRequest: boolean; editItem: (item: ClosetItem) => void; close: () => void; updateVisibility: (item: ClosetItem, visibility: Visibility) => void; requestItem: (item: ClosetItem) => void; deleteItem: (item: ClosetItem) => void }) {
+  return <div className="modal-backdrop" onMouseDown={close}><div className="item-modal" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={close} aria-label="Close item details"><X /></button><ItemVisual item={item} /><div className="modal-content"><p className="eyebrow">{own ? 'From your closet' : `From ${item.owner}'s closet`}</p><h2>{item.name}</h2><p>{item.brand ? `${item.brand} / ` : ''}{item.category}{item.size ? ` / Size ${item.size}` : ''}</p>{item.notes && <p className="item-notes">{item.notes}</p>}{own ? <><button className="secondary-button full" onClick={() => editItem(item)}><Pencil size={16} /> Edit item</button><h4>Who can see this?</h4><div className="visibility-options">{(['Private', 'Friends', 'Borrowable'] as Visibility[]).map((option) => <button key={option} className={item.visibility === option ? 'selected' : ''} onClick={() => updateVisibility(item, option)}>{option}</button>)}</div><button className="danger-button" onClick={() => deleteItem(item)}><Trash2 size={16} /> Delete item</button></> : <><div className="lender-note"><span className="avatar">{item.owner.slice(0, 1)}</span><p><strong>{item.owner} says:</strong><br />Shared with close friends.</p></div>{canRequest && item.visibility === 'Borrowable' && <button className="primary-button full" onClick={() => requestItem(item)}>Request to borrow</button>}</>}</div></div></div>
 }
 
-export function AddItemModal({ close, save }: { close: () => void; save: (item: ClosetItem) => boolean }) {
-  const [imageData, setImageData] = useState('')
-  const [imageMeta, setImageMeta] = useState<ImageProcessingResult | null>(null)
+export function AddItemModal({ close, save, item }: { close: () => void; save: (item: ClosetItem) => boolean; item?: ClosetItem }) {
+  const [imageData, setImageData] = useState(item?.imageData ?? '')
+  const [imageMeta, setImageMeta] = useState<ClosetItem['imageMeta']>(item?.imageMeta)
   const [error, setError] = useState('')
   const [processing, setProcessing] = useState(false)
-  const [visibility, setVisibility] = useState<Visibility>('Private')
+  const [visibility, setVisibility] = useState<Visibility>(item?.visibility ?? 'Private')
 
   async function selectImage(file?: File) {
     if (!file) return
@@ -47,14 +47,24 @@ export function AddItemModal({ close, save }: { close: () => void; save: (item: 
     }
   }
 
-  return <div className="modal-backdrop"><form className="add-modal" aria-label="Add clothing item" onSubmit={(event) => {
+  return <div className="modal-backdrop"><form className="add-modal" aria-label={item ? 'Edit clothing item' : 'Add clothing item'} onSubmit={(event) => {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    if (!imageData) { setError('Add a photo before saving.'); return }
+    if (!imageData && !item) { setError('Add a photo before saving.'); return }
+    const name = String(data.get('name')).trim()
+    if (!name) { setError('Enter an item name.'); return }
     const now = new Date().toISOString()
-    const saved = save({ id: Date.now(), ownerId: 'owner', owner: 'Brian', imageData, imageMeta: imageMeta ? { originalBytes: imageMeta.originalBytes, storedBytes: imageMeta.storedBytes, width: imageMeta.width, height: imageMeta.height, compressed: imageMeta.compressed } : undefined, name: String(data.get('name')), category: String(data.get('category')), color: String(data.get('color')), size: String(data.get('size')), brand: String(data.get('brand')), visibility, occasionTags: String(data.get('tags')).split(',').map((tag) => tag.trim()).filter(Boolean), notes: String(data.get('notes')), glyph: 'PHOTO', createdAt: now, updatedAt: now })
+    const saved = save({
+      id: item?.id ?? Date.now(), ownerId: 'owner', owner: 'Brian',
+      imageData: imageData || undefined,
+      imageMeta: imageMeta ? { originalBytes: imageMeta.originalBytes, storedBytes: imageMeta.storedBytes, width: imageMeta.width, height: imageMeta.height, compressed: imageMeta.compressed } : undefined,
+      name, category: String(data.get('category')), color: String(data.get('color')).trim(), size: String(data.get('size')).trim(),
+      brand: String(data.get('brand')).trim(), visibility, occasionTags: String(data.get('tags')).split(',').map((tag) => tag.trim()).filter(Boolean),
+      notes: String(data.get('notes')).trim(), glyph: imageData ? 'PHOTO' : (item?.glyph ?? 'ITEM'),
+      createdAt: item?.createdAt ?? now, updatedAt: now,
+    })
     if (!saved) setError('Your closet is out of local space. Delete an older photo or choose a smaller image, then save again.')
-  }}><button type="button" className="modal-close" onClick={close} aria-label="Close add item"><X /></button><p className="eyebrow">A new closet favorite</p><h2>Add an item</h2><label className={`upload-zone ${imageData ? 'has-preview' : ''}`}>{imageData ? <img src={imageData} alt="New item preview" /> : <><Camera /><strong>{processing ? 'Preparing photo...' : 'Take or choose a photo'}</strong><span>Large phone photos are compressed automatically</span></>}<input className="file-input" name="photo" type="file" accept="image/*" capture="environment" disabled={processing} onChange={(event) => selectImage(event.target.files?.[0])} /></label>{imageMeta && <p className="image-ready" role="status">{imageMeta.compressed ? `Photo optimized for your closet (${Math.max(1, Math.round(imageMeta.storedBytes / 1024))} KB).` : 'Photo ready to save.'}</p>}{error && <p className="form-error" role="alert">{error}</p>}<label>Item name<input name="name" placeholder="e.g. The perfect black dress" required /></label><div className="form-grid"><label>Category<select name="category"><option>Dresses</option><option>Jackets</option><option>Shoes</option><option>Accessories</option><option>Tops</option><option>Bottoms</option></select></label><label>Size<input name="size" defaultValue="M" required /></label><label>Brand<input name="brand" placeholder="Optional" /></label><label>Color<input name="color" placeholder="Black" required /></label></div><label>Occasion tags<input name="tags" placeholder="Dinner, vacation, work" /></label><label>Notes<textarea name="notes" placeholder="Fit notes, care instructions, or anything friends should know" /></label><fieldset><legend>Who can see it?</legend><div className="visibility-options">{(['Private', 'Friends', 'Borrowable'] as Visibility[]).map((option) => <button type="button" key={option} className={visibility === option ? 'selected' : ''} onClick={() => setVisibility(option)}>{option}</button>)}</div></fieldset><button className="primary-button full" type="submit" disabled={processing}>{processing ? 'Preparing photo...' : 'Save to my closet'}</button></form></div>
+  }}><button type="button" className="modal-close" onClick={close} aria-label={item ? 'Close edit item' : 'Close add item'}><X /></button><p className="eyebrow">Your wardrobe</p><h2>{item ? 'Edit an item' : 'Add an item'}</h2><label className={`upload-zone ${imageData ? 'has-preview' : ''}`}>{imageData ? <img src={imageData} alt="New item preview" /> : <><Camera /><strong>{processing ? 'Preparing photo...' : 'Take or choose a photo'}</strong><span>Large phone photos are compressed automatically</span></>}<input className="file-input" name="photo" type="file" accept="image/*" capture="environment" aria-label={imageData ? 'Replace with camera photo' : undefined} disabled={processing} onChange={(event) => selectImage(event.target.files?.[0])} /></label><label className="gallery-picker"><Camera size={16} /> {imageData ? 'Replace from photo library' : 'Choose from photo library'}<input className="file-input" type="file" accept="image/*" disabled={processing} onChange={(event) => selectImage(event.target.files?.[0])} /></label><p className="photo-local-note">Photos are saved in this browser only. Private items stay out of friend mode; this demo does not sync between devices.</p>{imageMeta && <p className="image-ready" role="status">{imageMeta.compressed ? `Photo optimized for your closet (${Math.max(1, Math.round(imageMeta.storedBytes / 1024))} KB).` : 'Photo ready to save.'}</p>}{error && <p className="form-error" role="alert">{error}</p>}<label>Item name<input name="name" defaultValue={item?.name} maxLength={80} placeholder="e.g. The perfect black dress" required /></label><div className="form-grid"><label>Category<select name="category" defaultValue={item?.category ?? 'Tops'}>{['Tops', 'Bottoms', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories'].map((value) => <option key={value}>{value}</option>)}</select></label><label>Size<input name="size" defaultValue={item?.size ?? 'M'} maxLength={24} /></label><label>Brand<input name="brand" defaultValue={item?.brand} maxLength={80} placeholder="Optional" /></label><label>Color<input name="color" defaultValue={item?.color} maxLength={35} placeholder="Optional" /></label></div><label>Occasion tags<input name="tags" defaultValue={item?.occasionTags.join(', ')} maxLength={160} placeholder="Dinner, vacation, work" /></label><label>Notes<textarea name="notes" defaultValue={item?.notes} maxLength={600} placeholder="Fit notes, care instructions, or anything friends should know" /></label><fieldset><legend>Who can see it?</legend><div className="visibility-options">{(['Private', 'Friends', 'Borrowable'] as Visibility[]).map((option) => <button type="button" key={option} className={visibility === option ? 'selected' : ''} onClick={() => setVisibility(option)}>{option}</button>)}</div></fieldset><button className="primary-button full" type="submit" disabled={processing}>{processing ? 'Preparing photo...' : item ? 'Save changes' : 'Save to my closet'}</button></form></div>
 }
 
 export function BorrowRequestModal({ item, requester, close, save }: { item: ClosetItem; requester: Identity; close: () => void; save: (request: BorrowRequest) => boolean }) {

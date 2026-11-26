@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { ArrowRight, CalendarDays, Check, ChevronRight, Heart, Plus, Shirt, Sparkles, Users, X } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, ChevronRight, Plus, Sparkles, Users, X } from 'lucide-react'
 import { friendItems, friends, initialItems } from '../data/mockData'
 import type { BorrowRequest, ClosetItem, Identity, Page } from '../types'
 import { ItemCard, ItemVisual, PageHeading } from './ClosetUI'
@@ -21,20 +20,6 @@ export function RequestsPage({ requests, identity, resolveRequest }: { requests:
 
 function RequestCard({ request, actions, resolve }: { request: BorrowRequest; actions?: boolean; resolve: (id: number, status: 'Approved' | 'Declined') => void }) {
   return <article className="request-card"><div className="request-thumb">{request.glyph}</div><div className="request-copy"><span className={`status ${request.status.toLowerCase()}`}>{request.status}</span><h3>{request.item}</h3><p>{request.requesterName} requested this from {request.person}</p><small><CalendarDays size={14} /> {request.dates}</small>{request.note && <blockquote>“{request.note}”</blockquote>}</div>{actions && <div className="request-actions"><button className="approve" onClick={() => resolve(request.id, 'Approved')}><Check /> Approve</button><button className="decline" onClick={() => resolve(request.id, 'Declined')}><X /> Decline</button></div>}</article>
-}
-
-export function StylePage({ visible, generate, onItem, items }: { visible: boolean; generate: () => void; onItem: (item: ClosetItem) => void; items: ClosetItem[] }) {
-  const [occasion, setOccasion] = useState('Rooftop birthday dinner')
-  const [vibe, setVibe] = useState('Effortless')
-  const [includeFriends, setIncludeFriends] = useState(true)
-  return <section className="style-page"><div className="style-intro page-container"><p className="eyebrow">Your AI stylist + your real-life closet</p><h1>What are we<br /><em>dressing for?</em></h1><p>Tell us the plan. We'll pull from your saved closet and the pieces your friends are happy to share.</p></div><div className="style-form page-container"><label>Occasion<input value={occasion} onChange={(event) => setOccasion(event.target.value)} /></label><label>Vibe<div className="choice-row">{['Effortless', 'A little bold', 'Romantic'].map((option) => <button key={option} className={vibe === option ? 'choice selected' : 'choice'} aria-pressed={vibe === option} onClick={() => setVibe(option)}>{option}</button>)}</div></label><label>Where?<input defaultValue="Palm Springs / Warm evening" /></label><label className="closet-source">Pull from<div className="choice-row"><button className={!includeFriends ? 'choice selected' : 'choice'} aria-pressed={!includeFriends} onClick={() => setIncludeFriends(false)}>My closet only</button><button className={includeFriends ? 'choice selected' : 'choice'} aria-pressed={includeFriends} onClick={() => setIncludeFriends(true)}>Mine + friends'</button></div></label><button className="primary-button generate" onClick={generate}><Sparkles size={19} /> Build my looks</button></div>
-    {visible && items.length < 3 && <div className="outfits page-container"><div className="empty-state"><Shirt /><h3>Add {3 - items.length} more {3 - items.length === 1 ? 'piece' : 'pieces'} to get styled</h3><p>Style Me only uses clothes actually saved in your closet. Upload a few more favorites, then try again.</p></div></div>}
-    {visible && items.length >= 3 && <div className="outfits page-container"><div className="section-heading"><p className="eyebrow">{vibe} ideas for {occasion || 'your occasion'}</p><h2>Your looks are ready</h2></div><div className="outfit-grid"><OutfitCard number="01" title="Desert after dark" description={`A ${vibe.toLowerCase()} base from your closet${includeFriends ? ' with one borrowed statement piece' : ''}.`} items={includeFriends ? [items[0], items[1], friendItems[0]] : [items[0], items[1], items[2]]} onItem={onItem} borrowed={includeFriends ? "Maya's dress" : undefined} /><OutfitCard number="02" title="Cool without trying" description={`Saved pieces styled for ${occasion || 'the plan'}, with an easy ${vibe.toLowerCase()} finish.`} items={includeFriends ? [items[1], items[2], friendItems[1]] : [items[1], items[2], items[0]]} onItem={onItem} borrowed={includeFriends ? "Liv's bag" : undefined} /><OutfitCard number="03" title="Soft power" description={`Your real closet leads this ${vibe.toLowerCase()} look.`} items={includeFriends ? [items[2], items[0], friendItems[5]] : [items[2], items[0], items[1]]} onItem={onItem} borrowed={includeFriends ? "Liv's heels" : undefined} /></div></div>}
-  </section>
-}
-
-function OutfitCard({ number, title, description, items, borrowed, onItem }: { number: string; title: string; description: string; items: ClosetItem[]; borrowed?: string; onItem: (item: ClosetItem) => void }) {
-  return <article className="outfit-card"><span className="outfit-number">LOOK {number}</span><div className="outfit-items">{items.map((item) => <button key={item.id} onClick={() => onItem(item)} aria-label={`View ${item.name}`}><ItemVisual item={item} compact /></button>)}</div><h3>{title}</h3><p>{description}</p><div className="outfit-sources"><small><Shirt size={14} /> {borrowed ? '2 from your closet' : 'All from your closet'}</small>{borrowed && <small><Users size={14} /> Borrowing {borrowed}</small>}</div><button className="secondary-button"><Heart size={16} /> Save this look</button></article>
 }
 
 export function EventPage({ onItem }: { onItem: (item: ClosetItem) => void }) {

@@ -6,6 +6,17 @@ Build Phase 1: Playable Mobile Beta.
 
 The app must work on a phone well enough that the owner can add real clothing photos and a friend can view borrowable items and request them.
 
+## Private stylist increment
+
+- [x] Private-by-default camera/library upload and photo/tag edits.
+- [x] Suggest and explain looks from owner photos first; label sample pieces separately.
+- [x] Save looks locally, reopen after refresh, and keep the owner stylist out of friend mode.
+- [x] Verify failed local saves don't claim success.
+- [ ] Try on a physical iPhone with six real garments. Track time to first useful look, save/wear, and return within one week.
+- [x] Add private-by-default multi-photo import with category review.
+- [ ] Add optional assisted tagging with editable confirmation.
+- [ ] Add private sync and real invite permissions before testing cross-device lending.
+
 ## Quality harness tasks
 
 - [x] Create BETA_CHECKLIST.md.
@@ -48,7 +59,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Save item details, visibility, tags, and notes.
 - [x] Show persisted owner items and item details.
 - [x] Allow visibility changes and item deletion.
-- [ ] Add edit flow for item details and photo.
+- [x] Add edit flow for item details and photo.
 - [ ] Add richer visibility/category filters and empty states.
 
 ### Friend sharing

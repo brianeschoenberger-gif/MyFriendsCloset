@@ -27,6 +27,15 @@ Open the Vite URL on the computer. To test on a phone connected to the same Wi-F
 
 Data is saved in browser `localStorage`, including uploaded photos as data URLs. Raster phone photos up to 15 MB are downscaled to a maximum 1600px dimension and stored as compressed JPEGs. If browser storage is full, the form remains open and explains how to recover instead of falsely reporting success. This is a durable single-device demo, not cross-device cloud sync yet.
 
+## Try your private closet stylist
+
+1. Open **Closet → Add from camera**. Use the camera or **Choose from photo library**. Start with a top, a bottom, and shoes (or a dress and shoes); six to ten pieces give more variety.
+2. Add a name, category and color. Optionally tag occasions like work, weekend, or dinner. Everything starts **Private**.
+3. Open **Style**, add an occasion, and choose a vibe and conditions. **Build my looks** proposes up to three combinations using only your photographed clothes by default. Review the explanation and save a look to reopen later.
+4. Select **Include labeled sample pieces** for a demonstration before adding your own clothes. This may include explicitly labeled borrowable samples.
+
+This beta uses matching rules, not a model. Clothing photos and looks do not leave your browser or sync to another device, browser or website address. Brian/Alex are seeded roles in the same browser, not accounts; the invite is for testing rather than access control. Clearing browser data may erase your closet.
+
 ## Checks
 
 ```bash
@@ -63,3 +72,5 @@ Because the current beta uses browser-local storage, each browser/device has its
 - `src/data/mockData.ts`: seed identities and starter wardrobe
 - `src/components/`: reusable closet and page UI
 - Vitest and Testing Library for the owner/friend beta journeys
+
+**Fast wardrobe setup:** Open **My closet → Add multiple photos**. Select up to 12 garment photos; choose a category for each. Names and colors are optional and editable after import. Photos are prepared on this device and saved privately to this browser; demo links do not carry your wardrobe to another device.

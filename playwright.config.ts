@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const devCommand = process.platform === 'win32'
-  ? 'npm.cmd run dev -- --host 127.0.0.1 --port 4173'
-  : 'npm run dev -- --host 127.0.0.1 --port 4173'
+const port = Number(process.env.PLAYWRIGHT_TEST_PORT) || 4173
+const url = `http://127.0.0.1:${port}`
+const devCommand = `${process.platform === 'win32' ? 'npm.cmd' : 'npm'} run dev -- --host 127.0.0.1 --port ${port} --strictPort`
 
 export default defineConfig({
   testDir: './e2e',
@@ -10,7 +10,8 @@ export default defineConfig({
   retries: 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: url,
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : undefined,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     ...devices['Desktop Chrome'],
@@ -18,7 +19,7 @@ export default defineConfig({
   },
   webServer: {
     command: devCommand,
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: true,
+    url,
+    reuseExistingServer: false,
   },
 })

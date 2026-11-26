@@ -2,23 +2,24 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { StylePage } from './components/Pages'
+import { StylePage } from './components/StylePage'
 
 function primaryNav() {
   return within(screen.getByRole('navigation', { name: 'Primary navigation' }))
 }
 
-async function addPhotoItem(name = 'Sunset midi dress') {
+async function addPhotoItem(name = 'Sunset midi dress', category = 'Dresses', share = true) {
   const user = userEvent.setup()
   await user.click(primaryNav().getByRole('button', { name: 'My closet' }))
   await user.click(screen.getByRole('button', { name: 'Add from camera' }))
   const photo = new File(['photo'], 'dress.png', { type: 'image/png' })
   await user.upload(screen.getByLabelText(/Take or choose a photo/), photo)
   await user.type(screen.getByPlaceholderText('e.g. The perfect black dress'), name)
+  await user.selectOptions(screen.getByLabelText('Category'), category)
   await user.clear(screen.getByLabelText('Size'))
   await user.type(screen.getByLabelText('Size'), 'M')
   await user.type(screen.getByLabelText('Color'), 'Coral')
-  await user.click(screen.getByRole('button', { name: 'Borrowable' }))
+  if (share) await user.click(screen.getByRole('button', { name: 'Borrowable' }))
   await user.click(screen.getByRole('button', { name: 'Save to my closet' }))
   return user
 }
@@ -121,20 +122,94 @@ describe('My Friends Closet playable beta', () => {
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Style me for Saturday' }))
     await user.click(screen.getByRole('button', { name: 'Romantic' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Include labeled sample pieces' }))
     await user.click(screen.getByRole('button', { name: 'Build my looks' }))
     expect(screen.getByRole('heading', { name: 'Your looks are ready' })).toBeInTheDocument()
-    expect(screen.getByText(/Romantic ideas for Rooftop birthday dinner/)).toBeInTheDocument()
+    expect(screen.getByText(/Romantic ideas for Everyday/)).toBeInTheDocument()
     expect(screen.getAllByText(/LOOK 0/)).toHaveLength(3)
   })
 
   it('does not invent outfits when the saved closet is too small', async () => {
     const user = userEvent.setup()
-    render(<StylePage visible generate={vi.fn()} onItem={vi.fn()} items={[]} />)
-
-    expect(screen.getByRole('heading', { name: 'Add 3 more pieces to get styled' })).toBeInTheDocument()
+    render(<StylePage onAdd={vi.fn()} onItem={vi.fn()} items={[]} />)
+    await user.click(screen.getByRole('button', { name: 'Build my looks' }))
+    expect(screen.getByRole('heading', { name: 'Your closet needs a base outfit' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Your looks are ready' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'A little bold' }))
     expect(screen.getByRole('button', { name: 'A little bold' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('builds and saves an outfit from exactly the owner photos and keeps Style out of Alex mode', async () => {
+    const first = render(<App />)
+    await addPhotoItem('Ivory tee', 'Tops', false)
+    const user = await addPhotoItem('Weekend jeans', 'Bottoms', false)
+    await user.click(primaryNav().getByRole('button', { name: 'Style' }))
+    await user.click(screen.getByRole('button', { name: 'Build my looks' }))
+    expect(screen.getByRole('heading', { name: 'Ivory tee + Weekend jeans' })).toBeInTheDocument()
+    expect(screen.getByText('2 of your photos')).toBeInTheDocument()
+    expect(screen.queryByText(/sample piece[s]? including/)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Save this look' }))
+    expect(screen.getByRole('button', { name: 'Saved looks (1)' })).toBeInTheDocument()
+    expect(window.localStorage.getItem('mfc-beta-saved-looks-v1')).toContain('Ivory tee')
+
+    first.unmount()
+    render(<App />)
+    await user.click(primaryNav().getByRole('button', { name: 'Style' }))
+    await user.click(screen.getByRole('button', { name: 'Saved looks (1)' }))
+    expect(screen.getByRole('heading', { name: 'Ivory tee + Weekend jeans' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Alex' }))
+    expect(screen.queryByRole('button', { name: /^Style$/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Ivory tee + Weekend jeans' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Ivory tee' })).not.toBeInTheDocument()
+  })
+
+  it('edits metadata without replacing the stored photo', async () => {
+    render(<App />)
+    const user = await addPhotoItem('Weekend shirt', 'Tops', false)
+    const original = JSON.parse(window.localStorage.getItem('mfc-beta-items-v1') ?? '[]').find((item: { name: string }) => item.name === 'Weekend shirt')
+    await user.click(screen.getByRole('button', { name: /Weekend shirt/ }))
+    await user.click(screen.getByRole('button', { name: 'Edit item' }))
+    await user.clear(screen.getByLabelText('Item name'))
+    await user.type(screen.getByLabelText('Item name'), 'Weekend tee')
+    await user.type(screen.getByLabelText('Occasion tags'), 'travel, casual')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    const updated = JSON.parse(window.localStorage.getItem('mfc-beta-items-v1') ?? '[]').find((item: { name: string }) => item.name === 'Weekend tee')
+    expect(updated.id).toEqual(original.id)
+    expect(updated.imageData).toEqual(original.imageData)
+    expect(updated.occasionTags).toEqual(['travel', 'casual'])
+  })
+
+  it('imports two categorized photos together, keeps them private, and restores them after remount', async () => {
+    const user = userEvent.setup()
+    const first = render(<App />)
+    await user.click(primaryNav().getByRole('button', { name: 'My closet' }))
+    await user.click(screen.getByRole('button', { name: 'Add multiple photos' }))
+    const dialog = screen.getByRole('dialog', { name: 'Add photos in bulk' })
+    await user.upload(within(dialog).getByLabelText('Choose multiple clothing photos'), [
+      new File(['shirt'], 'shirt.png', { type: 'image/png' }),
+      new File(['jeans'], 'jeans.png', { type: 'image/png' }),
+    ])
+    await within(dialog).findByAltText('Clothing photo 2')
+    expect(within(dialog).getByRole('button', { name: 'Save 2 private pieces' })).toBeDisabled()
+    await user.selectOptions(within(dialog).getByLabelText('Category for photo 1'), 'Tops')
+    await user.type(within(dialog).getByLabelText('Name for photo 1'), 'Striped tee')
+    await user.selectOptions(within(dialog).getByLabelText('Category for photo 2'), 'Bottoms')
+    await user.type(within(dialog).getByLabelText('Color for photo 2'), 'Indigo')
+    await user.click(within(dialog).getByRole('button', { name: 'Save 2 private pieces' }))
+    expect(screen.getByRole('heading', { name: 'Striped tee' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Indigo Bottoms' })).toBeInTheDocument()
+    const stored = JSON.parse(window.localStorage.getItem('mfc-beta-items-v1') ?? '[]').filter((item: { imageData?: string }) => item.imageData)
+    expect(stored.map(({ visibility }: { visibility: string }) => visibility)).toEqual(['Private', 'Private'])
+    expect(new Set(stored.map(({ id }: { id: number }) => id)).size).toBe(2)
+
+    await user.click(screen.getByRole('button', { name: 'Alex' }))
+    expect(screen.queryByRole('heading', { name: 'Striped tee' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Brian' }))
+    first.unmount()
+    render(<App />)
+    await user.click(primaryNav().getByRole('button', { name: 'My closet' }))
+    expect(screen.getByRole('heading', { name: 'Striped tee' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Indigo Bottoms' })).toBeInTheDocument()
   })
 
   it('keeps the add form open and explains how to recover from storage quota failure', async () => {
