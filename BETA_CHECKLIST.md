@@ -55,7 +55,7 @@ Evidence: Automated Testing Library coverage verifies owner/friend switching, pr
 - [x] Image preview appears before save.
 - [x] Saved image appears in My Closet.
 - [x] Image survives refresh using the chosen persistence layer.
-- [x] Batch uploads can be reviewed and all save privately in one action.
+- [x] Batch uploads can be reviewed and all save privately in one action. Exact-copy warnings are non-blocking and verified in Chromium for repeats in a batch and photos already saved.
 
 Score: 2/2
 Evidence: Vitest uses File objects and verifies one atomic multi-photo save, unique IDs, private visibility after switching to the friend demo, and persistence after remount. Playwright generates and uploads a 2400x1800 PNG, then proves it was stored as a 1600x1200 JPEG before completing the persisted beta flow. The input uses `accept="image/*"` and `capture="environment"`; physical-device camera behavior remains browser-dependent. A Chromium test also verifies an upright EXIF-tagged synthetic JPEG without MIME metadata survives reopen, and an unreadable HEIC shows the JPEG fallback.

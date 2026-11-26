@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Images, Trash2, X } from 'lucide-react'
+import { findExactPhotoDuplicates } from '../lib/photoDuplicates'
 import { photoDecodeMessage, usablePhoto } from '../lib/photoFiles'
 import { makeBatchLabels } from '../lib/bulkLabels'
 import { useDialogFocus } from '../lib/useDialogFocus'
@@ -12,7 +13,7 @@ let draftId = 0
 
 type Draft = { id: number; name: string; category: string; color: string; photo: ImageProcessingResult }
 
-export function BulkAddModal({ close, save }: { close: () => void; save: (pieces: Omit<ClosetItem, 'id'>[]) => boolean | Promise<boolean> }) {
+export function BulkAddModal({ close, save, existingPhotos }: { close: () => void; existingPhotos: ReadonlySet<string>; save: (pieces: Omit<ClosetItem, 'id'>[]) => boolean | Promise<boolean> }) {
   const [drafts, setDrafts] = useState<Draft[]>([])
   const [processing, setProcessing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -21,6 +22,8 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
   const ready = drafts.filter((draft) => draft.category).length
   const colorHintCount = drafts.filter((draft) => !draft.color.trim() && draft.photo.colorHint).length
   const defaultNames = makeBatchLabels(drafts)
+  const duplicates = useMemo(() => findExactPhotoDuplicates(drafts.map((draft) => draft.photo.dataUrl), existingPhotos),
+    [drafts, existingPhotos])
 
   function useColorHints() {
     setDrafts((current) => current.map((draft) => !draft.color.trim() && draft.photo.colorHint
@@ -90,10 +93,14 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
       {processing && <p role="status">Preparing photos…</p>}
       {errors.length > 0 && <ul className="form-error bulk-errors" role="alert">{errors.map((error, index) => <li key={index}>{error}</li>)}</ul>}
       {colorHintCount > 1 && <div className="bulk-color-action"><button type="button" className="secondary-button" onClick={useColorHints} disabled={processing || saving}>Use {colorHintCount} suggested colors</button><p>Estimated on this device. You can edit each one.</p></div>}
+      {duplicates.some(Boolean) && <p className="bulk-duplicate-note" role="status">Some photos match another copy. Remove duplicates if they’re accidental, or keep them to save separate pieces.</p>}
       <div className="bulk-drafts">{drafts.map((draft, index) => <fieldset className="bulk-draft" key={draft.id}>
         <legend className="sr-only">Photo {index + 1}</legend>
         <img src={draft.photo.dataUrl} alt={`Clothing photo ${index + 1}`} />
         <div className="bulk-fields">
+          {duplicates[index] && <p className="bulk-duplicate-detail">
+            {duplicates[index].kind === 'saved' ? 'Already in your closet' : `Same image as photo ${duplicates[index].first}`}
+          </p>}
           <label>Category<select required value={draft.category} aria-label={`Category for photo ${index + 1}`} onChange={(event) => update(draft.id, { category: event.target.value })}>
             <option value="">Choose one</option>{categories.map((category) => <option key={category}>{category}</option>)}
           </select></label>

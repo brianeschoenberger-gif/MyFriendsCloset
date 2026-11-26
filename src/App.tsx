@@ -53,6 +53,7 @@ function App() {
   const personalItems = useMemo(() => ownerItems.filter((item) => item.imageData || !exampleIds.has(item.id)), [ownerItems])
   const personalPhotos = useMemo(() => personalItems.filter((item) => item.imageData), [personalItems])
   const readyToStyle = hasOutfitBase(personalPhotos)
+  const existingPhotos = useMemo(() => new Set(personalPhotos.map((item) => item.imageData!)), [personalPhotos])
   const visibleOwnItems = useMemo(() => filterCloset(showSamples ? ownerItems : personalItems, {
     category, photoOnly, query: closetQuery, visibility: closetVisibility, order: closetOrder,
   }), [ownerItems, personalItems, showSamples, category, photoOnly, closetQuery, closetVisibility, closetOrder])
@@ -206,7 +207,7 @@ function App() {
     <nav className="mobile-nav" aria-label="Mobile navigation"><MobileNav icon={<Home />} label="Home" active={page === 'home'} onClick={() => navigate('home')} />{identity === 'owner' && <MobileNav icon={<Shirt />} label="Closet" active={page === 'closet'} onClick={() => navigate('closet')} />}<MobileNav icon={<Users />} label="Share" active={page === 'friends'} onClick={() => navigate('friends')} />{identity === 'owner' && <MobileNav icon={<Sparkles />} label="Style" active={page === 'style'} onClick={() => navigate('style')} />}<MobileNav icon={<CircleUserRound />} label="Requests" active={page === 'requests'} onClick={() => navigate('requests')} /></nav>
     {selectedItem && <ItemModal item={selectedItem} own={identity === 'owner' && selectedItem.ownerId === 'owner'} canRequest={identity === 'friend' && selectedItem.ownerId === 'owner'} styleItem={identity === 'owner' ? (item) => { navigate('style'); setStylingAnchorId(item.id) } : undefined} editItem={(item) => { clearItemStorageFailure(); setSelectedItem(null); setEditingItem(item) }} close={() => { clearItemStorageFailure(); setSelectedItem(null) }} updateVisibility={updateVisibility} requestItem={(item) => { setSelectedItem(null); setRequestingItem(item) }} deleteItem={deleteItem} writeConflict={itemStorageFailure?.kind === 'edit-conflict' ? itemStorageFailure.message : undefined} />}
     {showAdd && <AddItemModal close={() => setShowAdd(false)} save={async (item) => { const saved = await setItems((current) => [...current, { ...item, id: current.reduce((max, entry) => Math.max(max, entry.id + 1), item.id) }]); if (saved) { setShowAdd(false); if (page === 'closet') showPersonalPhotos(); notify('Saved to your closet') } return saved }} />}
-    {showBulkAdd && identity === 'owner' && <BulkAddModal close={() => setShowBulkAdd(false)} save={async (drafts) => {
+    {showBulkAdd && identity === 'owner' && <BulkAddModal existingPhotos={existingPhotos} close={() => setShowBulkAdd(false)} save={async (drafts) => {
       const saved = await setItems((current) => {
         const next = current.reduce((max, item) => Math.max(max, item.id + 1), Date.now())
         return [...current, ...drafts.map((draft, index) => ({ ...draft, id: next + index }))]

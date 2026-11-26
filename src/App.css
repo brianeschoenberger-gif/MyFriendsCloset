@@ -175,3 +175,8 @@ body:has(.modal-backdrop) { overflow: hidden; }
 .look-comparison-grid .secondary-button { max-width: 100%; white-space: normal; }
 .ai-look-panel .ai-name-choice { display: flex; gap: 8px; align-items: baseline; }
 .ai-look-panel .ai-name-choice input { width: auto; margin: 0; }
+
+.bulk-duplicate-note, .bulk-duplicate-detail { color: #633e21; font-size: .86rem; }
+.bulk-duplicate-note { padding: 8px 10px; border-radius: 8px; background: #f6e7d8; }
+.bulk-duplicate-detail { grid-column: 1 / -1; margin: 0; font-weight: 600; }
+.bulk-fields .bulk-duplicate-detail + label { grid-column: 1 / -1; }
