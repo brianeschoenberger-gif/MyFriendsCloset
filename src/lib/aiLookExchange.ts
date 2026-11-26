@@ -91,7 +91,7 @@ export function importAILooks(text: string, exchange: Exchange): OutfitLook[] {
     const base = ['one-piece', 'top', 'bottom'].flatMap((slot) => pieces.filter((item) => categorySlots[item.category] === slot))
     return {
       id: `ai-${key}`, title: base.map((item) => item.name).join(' + '), explanation: entry.why.trim() || 'Imported AI suggestion.',
-      itemIds: ids, occasion: exchange.preferences.occasion, vibe: exchange.preferences.vibe, source: 'ai-import',
+      itemIds: ids, anchorId: exchange.anchor ? known.get(exchange.anchor)?.localId : undefined, occasion: exchange.preferences.occasion, vibe: exchange.preferences.vibe, source: 'ai-import',
     }
   })
 }

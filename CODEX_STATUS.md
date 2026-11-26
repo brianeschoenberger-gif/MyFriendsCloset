@@ -1,5 +1,5 @@
 # Current checkpoint · 2026-11-26
 
-- Shippable: private batch photos, closet search and filters, local color hints, higher-capacity wardrobe storage, backup/restore, a garment-anchor stylist, and optional user-reviewed ChatGPT outfit import.
-- Verification: lint, 26 Vitest tests, seven Chromium flows, and production build passed. No physical iPhone or live AI account tested. Borrowing is same-browser simulation only.
-- Next: let people swap one garment without losing the rest of the look, then validate a real phone wardrobe. Separate real account/invite infrastructure and automatic model calls from this local beta.
+- Shippable: bulk private wardrobe intake, search and color hints, durable local photos and backups, garment-anchor styling, optional ChatGPT look import, and one-piece swaps that preserve the anchor.
+- Verification: lint, unit tests, the production build and eight real Chromium flows passed. A physical iPhone and live ChatGPT account were not tested. Same-browser borrowing is simulated.
+- Next: simplify onboarding into a real six-piece capsule and make the home screen clearly separate your closet from the sample demo; then test time to first saved outfit.

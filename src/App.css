@@ -110,3 +110,11 @@ body:has(.modal-backdrop) { overflow: hidden; }
   .closet-search-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .closet-search-field { grid-column: 1/-1; }
 }
+
+.swap-rack { border-block: 1px solid var(--line); margin: .85rem 0; padding: .15rem 0 .45rem; }
+.swap-rack summary { cursor: pointer; padding-block: .55rem; font-weight: 650; }
+.swap-rack summary svg { display: inline-block; vertical-align: middle; margin-inline: .25rem; }
+.swap-rack small { display: block; color: var(--muted); font-size: .85rem; margin-block: .45rem; }
+.swap-choices { display: grid; gap: .5rem; }
+.swap-choices label { display: grid; gap: .2rem; font-size: .9rem; font-weight: 600; }
+.swap-choices select { width: 100%; min-height: 44px; border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding-inline: .5rem; font-size: 1rem; }

@@ -84,3 +84,5 @@ To wear something specific, open its photo in **My closet** and tap **Style this
 **Get a ChatGPT look (optional):** In Style, choose an occasion plus any garment you want to keep in the outfit, then select **Try a ChatGPT look**. Review the text, copy it into ChatGPT yourself, and paste the JSON response back while the app tab remains open. The prompt contains only clothing names/categories/colors and the selected styling preferences. The app never uploads photos or sends prompts automatically, and only imports real saved item IDs forming a valid outfit. The automatic local matcher remains available without ChatGPT.
 
 **Find a garment:** Search My closet by garment name, brand, category, color, or occasion. Visibility and category filters combine with your search. When a photo has a clear central color, the app may offer a tag. Confirm it with one tap or leave it blank; the estimate uses only your device.
+
+**Swap one piece:** Expand **Swap a piece** on a generated look to replace a garment with another photographed garment in the same category. The garment you built around is locked, and you can undo the swaps or save your edited look separately.

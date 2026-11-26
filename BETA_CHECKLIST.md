@@ -132,3 +132,5 @@ Garment anchor: 19 Vitest checks and six phone-width Chromium flows passed, incl
 Manual AI handoff: 22 Vitest tests and seven Chromium Playwright flows passed, including text-only prompt review, invented-piece rejection, valid reply import, save and reopen. The UI fixture mimics a response; it does not exercise a live model or any network endpoint.
 
 Closet navigation: 26 Vitest tests and all seven real Chromium flows passed; the bulk mobile flow uses a suggested Navy color, then finds that garment through search. Ambiguous and transparent fixture photos do not get a color guess.
+
+Edit a look: eight real Chromium flows passed, including switching only a pair of pants in an anchored outfit, then saving and reopening the edited look. Tests also verify wrong-slot swaps and attempts to replace the selected anchor are rejected.

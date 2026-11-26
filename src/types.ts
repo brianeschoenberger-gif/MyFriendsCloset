@@ -62,7 +62,8 @@ export type Friend = {
 }
 
 export type OutfitLook = {
-  source?: 'ai-import'
+  source?: 'ai-import' | 'custom'
+  anchorId?: number
   id: string
   title: string
   itemIds: number[]

@@ -137,6 +137,6 @@ export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take =
       colorBalance ? 'A neutral piece balances the stronger color.' : '',
       !shoe ? 'No saved shoes yet; footwear is open.' : '',
     ].filter(Boolean).join(' ') || (slot(pieces[0]) === 'one-piece' ? 'Starts from a saved dress or set rather than inventing a missing piece.' : 'Pairs a saved top and bottom, with extras only where your closet has them.')
-    return { id: key, title: slot(pieces[0]) === 'one-piece' ? pieces[0].name : `${pieces[0].name} + ${pieces[1].name}`, itemIds: pieces.map((item) => item.id), explanation: reason, occasion: pref.occasion.trim(), vibe: pref.vibe }
+    return { id: key, title: slot(pieces[0]) === 'one-piece' ? pieces[0].name : `${pieces[0].name} + ${pieces[1].name}`, itemIds: pieces.map((item) => item.id), explanation: reason, anchorId: anchor?.id, occasion: pref.occasion.trim(), vibe: pref.vibe }
   })
 }

@@ -338,3 +338,36 @@ test('reviews a text-only AI prompt and safely imports a response with real clos
   await expect(page.getByText(/IMPORTED AI/)).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
+
+test('swaps one photographed garment without changing the anchor and saves the edited look', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded-swap')) return
+    sessionStorage.setItem('seeded-swap', '1')
+    const clothes = [['Anchor tee','Tops'], ['Blue jeans','Bottoms'], ['Black chinos','Bottoms'], ['Other tee','Tops']]
+    localStorage.setItem('mfc-beta-items-v1', JSON.stringify(clothes.map(([name, category], i) => ({
+      id: 201 + i, name, category, ownerId: 'owner', owner: 'Test', color: 'Navy',
+      visibility: 'Private', size: '', brand: '', glyph: 'PHOTO', occasionTags: [], notes: '',
+      imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNgAAAAAgABSK+kcQAAAABJRU5ErkJggg==',
+      createdAt: '2026-11-25T00:00:00.000Z', updatedAt: '2026-11-25T00:00:00.000Z',
+    }))))
+  })
+  await page.goto('/')
+  const nav = page.getByRole('navigation', { name: 'Mobile navigation' })
+  await nav.getByRole('button', { name: 'Closet' }).click()
+  await page.getByRole('button', { name: /Anchor tee/ }).click()
+  await page.getByRole('button', { name: 'Style this piece' }).click()
+  await page.getByRole('button', { name: 'Build my looks' }).click()
+  const target = page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Anchor tee + Blue jeans' }) })
+  await target.getByText('Swap a piece', { exact: true }).click()
+  await expect(target.getByLabel('Piece to swap').locator('option')).toHaveCount(2)
+  await target.getByLabel('Piece to swap').selectOption({ label: 'Blue jeans' })
+  await target.getByLabel('Replacement').selectOption({ label: 'Black chinos' })
+  await target.getByRole('button', { name: 'Use replacement' }).click()
+  const custom = page.getByRole('article').filter({ has: page.getByText(/You swapped Blue jeans for Black chinos/) })
+  await expect(custom.getByRole('heading', { name: 'Anchor tee + Black chinos' })).toBeVisible()
+  await custom.getByRole('button', { name: 'Save this look' }).click()
+  await page.reload()
+  await nav.getByRole('button', { name: 'Style' }).click()
+  await page.getByRole('button', { name: 'Saved looks (1)' }).click()
+  await expect(page.getByRole('heading', { name: 'Anchor tee + Black chinos' })).toBeVisible()
+})

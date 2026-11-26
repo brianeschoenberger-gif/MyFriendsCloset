@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Heart, Plus, Shirt, Sparkles, Users } from 'lucide-react'
 import { friendItems, initialItems } from '../data/mockData'
 import { storageKeys, usePersistentState } from '../lib/storage'
@@ -6,6 +6,8 @@ import { closetGaps, conditions, photographedPieces, suggestLooks, vibes, type C
 import type { ClosetItem, OutfitLook } from '../types'
 import { ItemVisual } from './ClosetUI'
 import { AILookPanel } from './AILookPanel'
+import { SwapRack } from './SwapRack'
+import { swapLook } from '../lib/swapLook'
 import { hasOutfitBase } from '../lib/aiLookExchange'
 
 type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean }
@@ -18,6 +20,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
   const [includeDemo, setIncludeDemo] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [saved, setSaved, storageError] = usePersistentState<OutfitLook[]>(storageKeys.savedLooks, [])
+  const [draftSwaps, setDraftSwaps] = useState<Record<string, OutfitLook>>({})
   const [showAI, setShowAI] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
   const realPieces = photographedPieces(items)
@@ -34,6 +37,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
 
   function handleGenerate() {
     const preferences = currentPreferences
+    setDraftSwaps({})
     setResult({ looks: suggestLooks(source, preferences, 3, anchor?.id), preferences, gaps: closetGaps(source, anchor?.id), demo: includeDemo })
     setShowSaved(false)
   }
@@ -62,6 +66,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
       {storageError && <p role="alert" className="form-error">Couldn’t save that look in this browser. Try freeing some browser storage.</p>}
     </form>
     {showAI && aiReady && <AILookPanel key={JSON.stringify([selectedOccasion, vibe, condition, anchor?.id])} pieces={realPieces} preferences={currentPreferences} anchorId={anchor?.id} close={() => setShowAI(false)} onLooks={(looks) => {
+      setDraftSwaps({})
       setResult({ looks, preferences: currentPreferences, gaps: '', demo: false, ai: true })
       setShowAI(false)
       setShowSaved(false)
@@ -71,19 +76,31 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
       {!showSaved && result && !visibleLooks.length && <div className="empty-state"><Shirt /><h3>Your closet needs a base outfit</h3><p>{result.gaps} Style Me won’t substitute pieces you haven’t saved. You can also turn on sample pieces to try the flow.</p><button type="button" className="secondary-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div>}
       {!showSaved && result && !!visibleLooks.length && <>
         <div className="section-heading"><p className="eyebrow">{result.preferences.vibe} ideas for {result.preferences.occasion}{result.demo ? ' · sample pieces enabled' : ''}{result.ai ? ' · imported from ChatGPT' : ''}</p><h2>{result.ai ? 'Your imported looks are ready' : 'Your looks are ready'}</h2></div>
-        <div className="outfit-grid">{visibleLooks.map((look, i) => <OutfitCard key={look.id} index={i} look={look} items={resolve(look)} onItem={onItem} onSave={toggleSave} isSaved={saved.some((entry) => entry.id === look.id)} />)}</div>
+        <div className="outfit-grid">{visibleLooks.map((initial, i) => {
+          const customized = draftSwaps[initial.id]
+          const look = customized && resolve(customized).length === customized.itemIds.length ? customized : initial
+          return <OutfitCard key={initial.id} index={i} look={look} items={resolve(look)} onItem={onItem} onSave={toggleSave}
+            isSaved={saved.some((entry) => entry.id === look.id)} swaps={
+              <SwapRack look={look} wardrobe={[...itemById.values()]} onSwap={(targetId, replacementId) => {
+                const next = swapLook(look, targetId, replacementId, [...itemById.values()])
+                if (next) setDraftSwaps((current) => ({ ...current, [initial.id]: next }))
+              }} onReset={customized ? () => setDraftSwaps((current) => {
+                const next = { ...current }; delete next[initial.id]; return next
+              }) : undefined} />
+            } />
+        })}</div>
         {visibleLooks.length < 3 && <p className="style-limit">{result.gaps}</p>}
       </>}
     </div>
   </section>
 }
 
-function OutfitCard({ index, look, items, onItem, onSave, isSaved }: { index: number; look: OutfitLook; items: ClosetItem[]; onItem: (item: ClosetItem) => void; onSave: (look: OutfitLook) => void; isSaved: boolean }) {
+function OutfitCard({ index, look, items, onItem, onSave, isSaved, swaps }: { index: number; swaps?: ReactNode; look: OutfitLook; items: ClosetItem[]; onItem: (item: ClosetItem) => void; onSave: (look: OutfitLook) => void; isSaved: boolean }) {
   const savedPieces = items.filter((item) => item.ownerId === 'owner' && Boolean(item.imageData)).length
   const friendPieces = items.length - items.filter((item) => item.ownerId === 'owner').length
   const samples = items.length - savedPieces
   return <article className="outfit-card">
-    <span className="outfit-number">LOOK {String(index + 1).padStart(2, '0')}{look.source === 'ai-import' ? ' · IMPORTED AI' : ''}</span>
+    <span className="outfit-number">LOOK {String(index + 1).padStart(2, '0')}{look.source === 'ai-import' ? ' · IMPORTED AI' : look.source === 'custom' ? ' · CUSTOM' : ''}</span>
     <div className="outfit-items outfit-tiles">{items.map((item) => <button key={item.id} onClick={() => onItem(item)} aria-label={`View ${item.name}`}><ItemVisual item={item} compact /><span>{item.name}</span></button>)}</div>
     <h3>{look.title}</h3><p>{look.explanation}</p>
     <div className="outfit-sources">
@@ -91,6 +108,7 @@ function OutfitCard({ index, look, items, onItem, onSave, isSaved }: { index: nu
       {!!samples && <small><Shirt size={14} /> {samples === 1 ? '1 sample piece' : `${samples} sample pieces`}{friendPieces ? ' including demo friend items' : ''}</small>}
       {!!friendPieces && <small><Users size={14} /> Demo loan, not a real request</small>}
     </div>
+    {swaps}
     <button className="secondary-button" onClick={() => onSave(look)} aria-pressed={isSaved}><Heart size={16} fill={isSaved ? 'currentColor' : 'none'} /> {isSaved ? 'Remove saved look' : 'Save this look'}</button>
   </article>
 }
