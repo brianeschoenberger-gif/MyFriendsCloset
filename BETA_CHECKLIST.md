@@ -136,3 +136,5 @@ Closet navigation: 26 Vitest tests and all seven real Chromium flows passed; the
 Edit a look: eight real Chromium flows passed, including switching only a pair of pants in an anchored outfit, then saving and reopening the edited look. Tests also verify wrong-slot swaps and attempts to replace the selected anchor are rejected.
 
 Home quick start: the fixture checks that samples count as zero photos and the first-photo action opens the batch importer. Physical six-garment setup is still the next usability test.
+
+Loan lifecycle: 31 Vitest tests and all eight Chromium flows passed. The mobile loan test checks a backwards date, then submits a valid request, approves, marks returned, reloads, and verifies both demo identities see the saved status. Unit coverage checks overlapping, flexible and non-overlapping date windows. There are no real cross-device loans.

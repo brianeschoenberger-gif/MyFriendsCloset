@@ -7,10 +7,11 @@ import { WardrobeBackupModal } from './components/WardrobeBackupModal'
 import { StylePage } from './components/StylePage'
 import { friendItems, friends, initialItems, initialRequests, profiles } from './data/mockData'
 import { storageKeys, usePersistentState } from './lib/storage'
+import { conflictingApproval } from './lib/borrowDates'
 import { useWardrobe } from './lib/useWardrobe'
 import { filterCloset, type ClosetFilters } from './lib/closetSearch'
 import { mergeWardrobeBackup } from './lib/wardrobeBackup'
-import type { BorrowRequest, ClosetItem, Identity, Page, Visibility } from './types'
+import type { BorrowRequest, BorrowStatus, ClosetItem, Identity, Page, Visibility } from './types'
 import './App.css'
 
 function App() {
@@ -103,19 +104,37 @@ function App() {
     }
   }
 
-  function saveRequest(request: BorrowRequest) {
-    const saved = setRequests((current) => [...current.filter((entry) => !(entry.itemId === request.itemId && entry.requesterId === request.requesterId && entry.status === 'Pending')), request])
-    if (saved) {
-      setRequestingItem(null)
-      setSelectedItem(null)
-      notify('Borrow request sent')
+  function saveRequest(request: BorrowRequest): string | undefined {
+    if (identity !== 'friend' || !items.some((item) => item.id === request.itemId && item.visibility === 'Borrowable')) {
+      return 'This piece is no longer borrowable in the demo.'
     }
-    return saved
+    if (conflictingApproval(request, requests)) return 'This piece has an approved loan for those dates. Pick different dates.'
+    const saved = setRequests((current) => {
+      const id = current.reduce((max, entry) => Math.max(max, entry.id + 1), request.id)
+      return [...current.filter((entry) => !(entry.itemId === request.itemId && entry.requesterId === request.requesterId && entry.status === 'Pending')), { ...request, id }]
+    })
+    if (!saved) return 'This request could not be saved in this browser.'
+    setRequestingItem(null)
+    setSelectedItem(null)
+    notify('Demo borrow request saved')
   }
 
-  function resolveRequest(id: number, status: 'Approved' | 'Declined') {
-    if (setRequests((current) => current.map((request) => request.id === id ? { ...request, status, updatedAt: new Date().toISOString() } : request))) {
-      notify(status === 'Approved' ? 'Borrow request approved' : 'Request declined')
+  function resolveRequest(id: number, status: Exclude<BorrowStatus, 'Pending'>) {
+    const request = requests.find((entry) => entry.id === id && entry.ownerId === 'owner')
+    if (identity !== 'owner' || !request || request.status !== (status === 'Returned' ? 'Approved' : 'Pending')) return
+    if (status === 'Approved' && !items.some((item) => item.id === request.itemId && item.visibility === 'Borrowable')) {
+      notify('Make the item borrowable again before approving.')
+      return
+    }
+    if (status === 'Approved' && conflictingApproval(request, requests)) {
+      notify('Cannot approve: dates overlap an existing loan.')
+      return
+    }
+    const now = new Date().toISOString()
+    if (setRequests((current) => current.map((entry) => entry.id === id ? {
+      ...entry, status, updatedAt: now, returnedAt: status === 'Returned' ? now : undefined,
+    } : entry))) {
+      notify(status === 'Approved' ? 'Borrow request approved' : status === 'Returned' ? 'Marked returned' : 'Request declined')
     }
   }
 

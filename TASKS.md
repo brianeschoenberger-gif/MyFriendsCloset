@@ -78,8 +78,8 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Alex can request a Borrowable item with dates and a note.
 - [x] Brian can view, approve, or decline incoming requests.
 - [x] Alex can see persisted request status.
-- [ ] Prevent unavailable/approved date conflicts.
-- [ ] Add returned status action.
+- [x] Prevent conflicting demo loan approvals and invalid date ranges.
+- [x] Add returned status action and persisted returned date.
 
 ### Style Me
 

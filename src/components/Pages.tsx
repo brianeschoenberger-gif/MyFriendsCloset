@@ -1,6 +1,6 @@
 import { ArrowRight, CalendarDays, Check, ChevronRight, Images, Plus, Sparkles, Users, X } from 'lucide-react'
 import { friendItems, friends, initialItems } from '../data/mockData'
-import type { BorrowRequest, ClosetItem, Identity, Page } from '../types'
+import type { BorrowRequest, BorrowStatus, ClosetItem, Identity, Page } from '../types'
 import { ItemCard, ItemVisual, PageHeading } from './ClosetUI'
 import { hasOutfitBase } from '../lib/aiLookExchange'
 import { photographedPieces } from '../lib/stylist'
@@ -35,13 +35,16 @@ export function Dashboard({ navigate, items, requests, onItem, addPhotos }: { na
   </>
 }
 
-export function RequestsPage({ requests, identity, resolveRequest }: { requests: BorrowRequest[]; identity: Identity; resolveRequest: (id: number, status: 'Approved' | 'Declined') => void }) {
+export function RequestsPage({ requests, identity, resolveRequest }: { requests: BorrowRequest[]; identity: Identity; resolveRequest: (id: number, status: Exclude<BorrowStatus, 'Pending'>) => void }) {
   const visible = requests.filter((request) => identity === 'owner' ? request.ownerId === 'owner' : request.requesterId === identity)
-  return <section className="page-container"><PageHeading eyebrow="Closet karma" title="Borrow requests" subtitle={identity === 'owner' ? 'Review requests for your shared pieces.' : 'Track everything you asked Brian to borrow.'} />{visible.length ? <div className="requests-layout single"><div><div className="section-heading"><p className="eyebrow">{identity === 'owner' ? 'Needs your answer' : 'Your requests'}</p><h2>{identity === 'owner' ? 'Incoming' : 'Sent to Brian'}</h2></div>{visible.map((request) => <RequestCard key={request.id} request={request} actions={identity === 'owner' && request.status === 'Pending'} resolve={resolveRequest} />)}</div></div> : <div className="empty-state"><Users /><h3>No requests yet</h3><p>{identity === 'owner' ? 'Requests from Alex will appear here.' : "Open a borrowable item in Brian's closet to send one."}</p></div>}</section>
+  return <section className="page-container"><PageHeading eyebrow="Closet karma" title="Borrow requests" subtitle={identity === 'owner' ? 'Review requests for your shared pieces.' : 'Track everything you asked Brian to borrow.'} />{visible.length ? <div className="requests-layout single"><div><div className="section-heading"><p className="eyebrow">{identity === 'owner' ? 'Needs your answer' : 'Your requests'}</p><h2>{identity === 'owner' ? 'Incoming' : 'Sent to Brian'}</h2></div>{visible.map((request) => <RequestCard key={request.id} request={request} actions={identity === 'owner' && (request.status === 'Pending' || request.status === 'Approved')} resolve={resolveRequest} />)}</div></div> : <div className="empty-state"><Users /><h3>No requests yet</h3><p>{identity === 'owner' ? 'Requests from Alex will appear here.' : "Open a borrowable item in Brian's closet to send one."}</p></div>}</section>
 }
 
-function RequestCard({ request, actions, resolve }: { request: BorrowRequest; actions?: boolean; resolve: (id: number, status: 'Approved' | 'Declined') => void }) {
-  return <article className="request-card"><div className="request-thumb">{request.glyph}</div><div className="request-copy"><span className={`status ${request.status.toLowerCase()}`}>{request.status}</span><h3>{request.item}</h3><p>{request.requesterName} requested this from {request.person}</p><small><CalendarDays size={14} /> {request.dates}</small>{request.note && <blockquote>“{request.note}”</blockquote>}</div>{actions && <div className="request-actions"><button className="approve" onClick={() => resolve(request.id, 'Approved')}><Check /> Approve</button><button className="decline" onClick={() => resolve(request.id, 'Declined')}><X /> Decline</button></div>}</article>
+function RequestCard({ request, actions, resolve }: { request: BorrowRequest; actions?: boolean; resolve: (id: number, status: Exclude<BorrowStatus, 'Pending'>) => void }) {
+  return <article className="request-card"><div className="request-thumb">{request.glyph}</div><div className="request-copy"><span className={`status ${request.status.toLowerCase()}`}>{request.status}</span><h3>{request.item}</h3><p>{request.requesterName} requested this from {request.person}</p><small><CalendarDays size={14} /> {request.dates}</small>{request.note && <blockquote>“{request.note}”</blockquote>}</div>{actions && <div className="request-actions">{request.status === 'Pending'
+    ? <><button className="approve" onClick={() => resolve(request.id, 'Approved')}><Check /> Approve</button><button className="decline" onClick={() => resolve(request.id, 'Declined')}><X /> Decline</button></>
+    : <button className="decline" onClick={() => resolve(request.id, 'Returned')}><Check /> Mark returned</button>}
+  </div>}</article>
 }
 
 export function EventPage({ onItem }: { onItem: (item: ClosetItem) => void }) {

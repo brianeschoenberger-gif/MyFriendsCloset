@@ -126,3 +126,5 @@ body:has(.modal-backdrop) { overflow: hidden; }
   .wardrobe-hero .hero-copy h1 { font-size: clamp(2.65rem, 10vw, 4rem); }
   .wardrobe-hero .hero-copy > p:not(.eyebrow) { font-size: 1rem; }
 }
+
+.status.returned { color: var(--muted); }

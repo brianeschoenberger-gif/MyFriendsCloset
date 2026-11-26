@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Closed the local lending lifecycle: date validation, overlapping-approval checks, and an owner-only returned state that persists for both demo roles.
+
 - Made the home screen lead with a real wardrobe, a six-piece setup, and an outfit-ready state. Clearly separated sample clothes and the local lending demo.
 
 - Added one-at-a-time garment swaps with comparable private pieces, a protected anchor, undo, and independent saving of the edited look.

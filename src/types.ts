@@ -35,6 +35,8 @@ export type ClosetItem = {
   updatedAt: string
 }
 
+export type BorrowStatus = 'Pending' | 'Approved' | 'Declined' | 'Returned'
+
 export type BorrowRequest = {
   id: number
   itemId: number
@@ -45,10 +47,11 @@ export type BorrowRequest = {
   person: string
   dates: string
   direction: 'incoming' | 'outgoing'
-  status: 'Pending' | 'Approved' | 'Declined'
+  status: BorrowStatus
   glyph: string
   startDate?: string
   endDate?: string
+  returnedAt?: string
   note?: string
   createdAt: string
   updatedAt: string
