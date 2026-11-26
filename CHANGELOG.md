@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Increased contrast for secondary text and made mobile navigation and item labels easier to read. Added an optional axe-core audit of six first-run screens at phone width.
+
 - Tested a non-deployed, consent-gated request ceiling for future hosted styling. Ordinary browser roles cannot call it; per-account and project ceilings were exercised with synthetic users. The public app made no model calls.
 
 - Right after adding a wearable base, the closet suggests styling your photos; otherwise it tells you what kind of piece is missing.

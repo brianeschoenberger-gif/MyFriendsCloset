@@ -93,3 +93,13 @@ In **Style → Saved looks**, tap **Mark worn today** to record a day you actual
 A saved outfit made entirely from your photos has **Ask a friend → Download outfit card**. The PNG contains garment photos and names, not notes, dates, or contact details. Nothing is shared or uploaded by the app.
 
 A separate [hosted styling proof of concept](server/README.md) is tested with fake accounts and fake model transport. It is not deployed or bundled into GitHub Pages.
+
+Optional phone-width accessibility audit (no app dependency):
+
+```sh
+scratch="$(mktemp -d)"
+npm install --ignore-scripts --prefix "$scratch" axe-core
+AXE_CORE_SCRIPT="$scratch/node_modules/axe-core/axe.min.js" npm run test:e2e -- -g 'optional axe-core'
+```
+
+The audit covers six initial screens automatically. It is not a substitute for a manual screen-reader or physical phone test.
