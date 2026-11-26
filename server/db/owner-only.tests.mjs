@@ -76,6 +76,58 @@ try {
   await asAccount(accountA)
   assert.deepEqual((await db.query('select owner_id, enabled from public.closet_styling_consent')).rows, [{ owner_id: accountA, enabled: false }])
   console.log('Verified local database isolation: signed-out denial, two independent owners, protected photo keys, and owner-only revocable consent.')
+  // This schema contains metadata only; there are no actual stored image bytes.
+  await db.exec(`
+    reset role;
+    create schema storage;
+    create table storage.buckets (id text primary key, public boolean not null);
+    create table storage.objects (bucket_id text references storage.buckets(id), name text, primary key (bucket_id, name));
+    alter table storage.objects enable row level security;
+    grant usage on schema storage to anon, authenticated;
+    grant select, insert, update, delete on storage.objects to anon, authenticated;
+    create policy old_broad_policy on storage.objects for all to anon, authenticated using (true) with check (true);
+  `)
+  const photoMigration = await readFile(new URL('./private-photos.sql', import.meta.url), 'utf8')
+  await assert.rejects(db.exec(photoMigration), /must exist and be private/)
+  await db.exec('rollback')
+  const privateBucket = 'mfc-wardrobe-private-v1'
+  const otherBucket = 'ordinary'
+  await db.query('insert into storage.buckets (id, public) values ($1, true), ($2, false)', [privateBucket, otherBucket])
+  await assert.rejects(db.exec(photoMigration), /must exist and be private/)
+  await db.exec('rollback')
+  await db.query('update storage.buckets set public = false where id = $1', [privateBucket])
+  await db.exec(photoMigration)
+
+  const photoA = `${accountA}/${pieceA}/garment.jpg`
+  const photoB = `${accountB}/${pieceB}/garment.jpg`
+  const putPhoto = 'insert into storage.objects (bucket_id, name) values ($1, $2)'
+  const visiblePhotos = 'select name from storage.objects where bucket_id = $1 order by name'
+  await db.query(putPhoto, [otherBucket, 'unrelated-file'])
+  await db.exec('set role anon')
+  assert.deepEqual((await db.query(visiblePhotos, [privateBucket])).rows, [])
+  assert.deepEqual((await db.query(visiblePhotos, [otherBucket])).rows, [{ name: 'unrelated-file' }])
+  await assert.rejects(db.query(putPhoto, [privateBucket, photoA]), denied)
+
+  await asAccount(accountA)
+  await db.query(putPhoto, [privateBucket, photoA])
+  await assert.rejects(db.query(putPhoto, [privateBucket, photoB]), denied)
+  await assert.rejects(db.query(putPhoto, [privateBucket, `${accountA}/not-a-registered-garment/garment.jpg`]), denied)
+  await assert.rejects(db.query('update storage.objects set bucket_id = $1, name = $2 where bucket_id = $3',
+    [privateBucket, photoB, otherBucket]), denied)
+  assert.equal((await db.query('update storage.objects set name = $1 where name = $2 returning name',
+    ['moved', photoA])).rows.length, 0)
+
+  await asAccount(accountB)
+  assert.deepEqual((await db.query(visiblePhotos, [privateBucket])).rows, [])
+  await db.query(putPhoto, [privateBucket, photoB])
+  assert.deepEqual((await db.query(visiblePhotos, [privateBucket])).rows, [{ name: photoB }])
+  assert.equal((await db.query('delete from storage.objects where name = $1 returning name', [photoA])).rows.length, 0)
+  await asAccount(accountA)
+  assert.deepEqual((await db.query(visiblePhotos, [privateBucket])).rows, [{ name: photoA }])
+  assert.deepEqual((await db.query('delete from storage.objects where name = $1 returning name', [photoA])).rows, [{ name: photoA }])
+  await db.exec('reset role; set role anon')
+  assert.deepEqual((await db.query(visiblePhotos, [privateBucket])).rows, [])
+  console.log('Verified future image metadata policies: private bucket required, two isolated owners, no anonymous access even with an older broad policy.')
 } finally {
   await db.close()
 }
