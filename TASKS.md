@@ -12,6 +12,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Suggest and explain looks from owner photos first; label sample pieces separately.
 - [x] Save looks locally, reopen after refresh, and keep the owner stylist out of friend mode.
 - [x] Verify failed local saves don't claim success.
+- [x] Validate the six-piece cold start and a downloadable outfit card at phone width.
 - [ ] Try on a physical iPhone with six real garments. Track time to first useful look, save/wear, and return within one week.
 - [x] Add private-by-default multi-photo import with category review.
 - [x] Add private, editable color-tag hints on single and batch photos.

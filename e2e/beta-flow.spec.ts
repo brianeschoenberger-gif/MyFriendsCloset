@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 test('owner upload to persisted friend request and approval', async ({ page }) => {
   await page.goto('/')
@@ -420,4 +420,56 @@ test('home and quick intake fit small phones through desktop, with keyboard focu
   await expect(dialog).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(bulk).toBeFocused()
+})
+
+test('new user can style six owned photos for an occasion and download a local outfit card', async ({ page }, testInfo) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Add your first photos' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Add photos in bulk' })
+  const colors = ['#ead0bc', '#536d7f', '#7d4f56', '#2f4d54', '#b3926e', '#a8ab9c']
+  const photos = await page.evaluate((palette) => {
+    const c = document.createElement('canvas')
+    c.width = 240; c.height = 180
+    const ctx = c.getContext('2d')!
+    return palette.map((color, i) => {
+      ctx.fillStyle = '#ebe0d6'
+      ctx.fillRect(0, 0, c.width, c.height)
+      ctx.fillStyle = color
+      ctx.fillRect(50 + i, 24, 132, 140)
+      return c.toDataURL('image/png').split(',')[1]
+    })
+  }, colors)
+  await dialog.getByLabel('Choose multiple clothing photos').setInputFiles(photos.map((data, i) => ({
+    name: `pilot-${i}.png`, mimeType: 'image/png', buffer: Buffer.from(data, 'base64'),
+  })))
+  await expect(dialog.getByAltText('Clothing photo 6')).toBeVisible()
+  for (const [i, category] of ['Tops', 'Tops', 'Bottoms', 'Bottoms', 'Shoes', 'Jackets'].entries()) {
+    await dialog.getByLabel(`Category for photo ${i + 1}`).selectOption(category)
+  }
+  await dialog.getByRole('button', { name: 'Save 6 private pieces' }).click()
+  await expect(dialog).toHaveCount(0)
+  await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Style' }).click()
+  await page.getByLabel('Occasion').fill('Dinner on the patio')
+  await expect(page.getByText('6 photographed pieces')).toBeVisible()
+  await page.getByRole('button', { name: 'Build my looks' }).click()
+  await expect(page.getByRole('heading', { name: 'Your looks are ready' })).toBeVisible()
+  await page.getByRole('button', { name: 'Save this look' }).first().click()
+  await page.getByRole('button', { name: 'Saved looks (1)' }).click()
+  await expect(page.getByText(/\d+ of your photos/)).toBeVisible()
+  await expect(page.getByText(/sample pieces/).filter({ hasText: /\d+ sample piece/ })).toHaveCount(0)
+  await page.getByText('Ask a friend', { exact: true }).click()
+  await expect(page.getByText(/it saves to your device/i)).toBeVisible()
+  const outgoing: string[] = []
+  page.on('request', (request) => outgoing.push(request.url()))
+  const pending = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download outfit card' }).click()
+  const download = await pending
+  expect(download.suggestedFilename()).toBe('my-friends-closet-outfit.png')
+  const cardPath = testInfo.outputPath('outfit-card.png')
+  await download.saveAs(cardPath)
+  const png = await readFile(cardPath)
+  expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+  expect(png.readUInt32BE(16)).toBe(1000)
+  expect(png.readUInt32BE(20)).toBeGreaterThan(600)
+  expect(outgoing.filter((url) => url.startsWith('http'))).toEqual([])
 })

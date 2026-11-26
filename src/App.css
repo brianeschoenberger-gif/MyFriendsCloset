@@ -134,3 +134,10 @@ body:has(.modal-backdrop) { overflow: hidden; }
 .wear-actions button[aria-pressed="true"] { background: #e4e8d9; border-color: var(--olive); }
 
 .gallery-picker:focus-within, .upload-zone:focus-within { outline: 2px solid var(--olive); outline-offset: 3px; }
+
+.look-card-download {
+  padding: 12px 0;
+  border-top: 1px solid var(--line, #e1d4c9);
+}
+.look-card-download summary { cursor: pointer; font-weight: 650; min-height: 32px; }
+.look-card-download p { margin: 7px 0 12px; font-size: 0.9rem; }

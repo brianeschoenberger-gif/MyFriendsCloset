@@ -103,6 +103,9 @@ Evidence: Vitest and Playwright submit dates and a note, switch identities, appr
 - [x] Style offers up to three combinations with explanations, or useful guidance when pieces are missing.
 - [x] Saved looks survive reload; optional samples and the same-browser demo are explicit.
 - [x] Friend mode cannot see the owner's private stylist or private items.
+- [x] A saved owner-photo outfit downloads an image card without making any HTTP requests.
+
+Cold-start evidence: a fresh 390px Chromium session adds six synthetic garment photos, selects an occasion, saves an own-photo-only look and verifies the local PNG header, filename and dimensions. Human relevance and physical phone behavior still need the pilot in BETA_PILOT.md.
 
 Score: 2/2 for the local feature.
 Evidence: Vitest verifies owner-only photo filtering, matching by tags and conditions, owner-only access, save/reload, photo editing, and safe handling of failed storage writes. This is not AI or cross-device verification.

@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Added a downloadable on-device outfit card for saved personal-photo outfits. Proved the complete six-photo first-run flow and documented a physical-phone pilot, account sync, and automatic AI gates.
+
 - Added keyboard focus containment and Escape dismissal to wardrobe dialogs, with focus restored to the opening control when it is still on screen. Tested the home screen at 320, 390, 768 and 1280px.
 
 - Added local wear history for saved looks. Users can mark or undo today’s wear and see the last worn date after reload.

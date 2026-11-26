@@ -25,7 +25,7 @@ Open the Vite URL on the computer. To test on a phone connected to the same Wi-F
 10. Refresh or switch back to Alex and confirm the updated status remains.
 11. Optional: in Alex mode, use **Copy invite link** to verify the demo link opens `?invite=MFC-BRIAN&mode=friend` and lands in friend view.
 
-Data is saved in browser `localStorage`, including uploaded photos as data URLs. Raster phone photos up to 15 MB are downscaled to a maximum 1600px dimension and stored as compressed JPEGs. If browser storage is full, the form remains open and explains how to recover instead of falsely reporting success. This is a durable single-device demo, not cross-device cloud sync yet.
+Garments and photos are saved on this browser in IndexedDB when available, with a legacy localStorage fallback. Raster phone photos up to 15 MB are downscaled to a maximum 1600px dimension and stored as compressed JPEGs. If browser storage is full, the form remains open and explains how to recover instead of falsely reporting success. This is a durable single-device demo, not cross-device cloud sync yet.
 
 ## Try your private closet stylist
 
@@ -34,7 +34,7 @@ Data is saved in browser `localStorage`, including uploaded photos as data URLs.
 3. Open **Style**, add an occasion, and choose a vibe and conditions. **Build my looks** proposes up to three combinations using only your photographed clothes by default. Review the explanation and save a look to reopen later.
 4. Select **Include labeled sample pieces** for a demonstration before adding your own clothes. This may include explicitly labeled borrowable samples.
 
-This beta uses matching rules, not a model. Clothing photos and looks do not leave your browser or sync to another device, browser or website address. Brian/Alex are seeded roles in the same browser, not accounts; the invite is for testing rather than access control. Clearing browser data may erase your closet.
+The built-in stylist uses matching rules. The optional ChatGPT handoff below uses a separate conversation that you control. Clothing photos and looks do not leave your browser or sync to another device, browser or website address. Brian/Alex are seeded roles in the same browser, not accounts; the invite is for testing rather than access control. Clearing browser data may erase your closet.
 
 ## Checks
 
@@ -63,7 +63,7 @@ Import the repository, use the Vite preset, set build command to `npm run build`
 
 Import the repository, set build command to `npm run build`, and publish directory to `dist`.
 
-Because the current beta uses browser-local storage, each browser/device has its own data. A later Supabase adapter will provide shared cross-device accounts, database records, and image storage.
+Because the current beta uses browser-local storage, each browser/device has its own data. Accounts and sync are not yet connected. See [the pilot and rollout gates](BETA_PILOT.md).
 
 ## Architecture
 
@@ -88,3 +88,5 @@ To wear something specific, open its photo in **My closet** and tap **Style this
 **Swap one piece:** Expand **Swap a piece** on a generated look to replace a garment with another photographed garment in the same category. The garment you built around is locked, and you can undo the swaps or save your edited look separately.
 
 In **Style → Saved looks**, tap **Mark worn today** to record a day you actually wore the outfit. Tap again to undo. The date and count stay in this browser.
+
+A saved outfit made entirely from your photos has **Ask a friend → Download outfit card**. The PNG contains garment photos and names, not notes, dates, or contact details. Nothing is shared or uploaded by the app.

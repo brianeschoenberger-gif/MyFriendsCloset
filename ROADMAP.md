@@ -23,6 +23,8 @@ Success criteria:
 
 ## Next: prove one useful outfit before adding infrastructure
 
+See [the five-minute pilot and rollout gates](BETA_PILOT.md) for exact steps, checks and what to build based on results. A six-photo cold start is now verified with synthetic images; it does not substitute for the physical-phone trial.
+
 - Test with Brian and, if they opt in, 4–6 people using their own clothes. Give them one real prompt: “What should I wear to dinner tomorrow?” Ask them to add only 6–10 pieces, not their entire wardrobe.
 - Measure time to first useful look (target: under five minutes from first photo), completion (target: most participants build a look without help), and actual use (target: at least half save or wear one and at least two return unprompted within a week). Small-sample targets are decision gates, not evidence of market demand.
 - If uploads are the bottleneck: ship multi-photo import and faster tagging first. If outfits miss: collect explicit “I'd wear this,” swap, and “not my style” feedback before adding a social feed.

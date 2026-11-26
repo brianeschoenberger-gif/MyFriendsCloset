@@ -10,6 +10,8 @@ import { SwapRack } from './SwapRack'
 import { swapLook } from '../lib/swapLook'
 import { dateLabel, displayWearDate, toggleWear } from '../lib/wearLog'
 import { hasOutfitBase } from '../lib/aiLookExchange'
+import { canMakeLookCard } from '../lib/lookCard'
+import { LookCardDownload } from './LookCardDownload'
 
 type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean }
 
@@ -121,6 +123,7 @@ function OutfitCard({ index, look, items, onItem, onSave, isSaved, swaps, onWorn
       <button className="secondary-button" onClick={onWorn} aria-pressed={wornToday}><Check size={16} /> {wornToday ? 'Wore it today' : 'Mark worn today'}</button>
       {lastWorn && <span role="status">Last worn {wornToday ? 'today' : lastWorn} · {look.wornOn!.length} {look.wornOn!.length === 1 ? 'day' : 'days'} logged</span>}
     </div>}
+    {onWorn && canMakeLookCard(items) && <LookCardDownload items={items} />}
     <button className="secondary-button" onClick={() => onSave(look)} aria-pressed={isSaved}><Heart size={16} fill={isSaved ? 'currentColor' : 'none'} /> {isSaved ? 'Remove saved look' : 'Save this look'}</button>
   </article>
 }
