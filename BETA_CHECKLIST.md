@@ -36,7 +36,7 @@ Evidence: `npm install`, Vite local server, `npm run build`, and README instruct
 - [x] Clothing cards look good on mobile.
 
 Score: 2/2
-Evidence: Manual in-app browser verification and the Playwright E2E at 390x844 cover navigation, identity switching, friend closet, item details, request form, and zero document overflow. Current Chromium coverage also checks the home screen at 320, 390, 768 and 1280px; at 320px it tests focus entry, Tab wrap, Escape and focus restoration. The optional axe-core audit reported no violations under its selected automated rules on six first-run states at 390px after contrast corrections. Physical iPhone capture and manual assistive-technology checks are separate.
+Evidence: Manual in-app browser verification and the Playwright E2E at 390x844 cover navigation, identity switching, friend closet, item details, request form, and zero document overflow. Current Chromium coverage also checks the home screen at 320, 390, 768 and 1280px; at 320px it tests focus entry, Tab wrap, Escape and focus restoration. The optional axe-core audit reported no violations under its selected automated rules on six first-run states at 390px after contrast corrections. A 30-item fixture also verifies batched rendering, whole-closet search and focus on newly revealed cards. Physical iPhone capture and manual assistive-technology checks are separate.
 
 ### Owner/demo identity
 

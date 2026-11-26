@@ -6,14 +6,14 @@ import { useDialogFocus } from '../lib/useDialogFocus'
 import { checkLoanDates } from '../lib/borrowDates'
 import type { BorrowRequest, ClosetItem, Identity, Visibility } from '../types'
 
-export function ItemVisual({ item, compact = false }: { item: ClosetItem; compact?: boolean }) {
-  if (item.imageData) return <div className={`item-visual uploaded ${compact ? 'compact' : ''}`}><img src={item.imageData} alt="" /></div>
+export function ItemVisual({ item, compact = false, deferred = false }: { item: ClosetItem; compact?: boolean; deferred?: boolean }) {
+  if (item.imageData) return <div className={`item-visual uploaded ${compact ? 'compact' : ''}`}><img src={item.imageData} alt="" loading={deferred ? "lazy" : "eager"} decoding="async" /></div>
   return <div className={`item-visual color-${item.color} ${compact ? 'compact' : ''}`}><span>{item.glyph}</span><div className={`garment garment-${item.category.toLowerCase()}`} /></div>
 }
 
 export function ItemCard({ item, onClick }: { item: ClosetItem; onClick: () => void }) {
   return <button className="item-card" onClick={onClick}>
-    <div className="visual-wrap"><ItemVisual item={item} /><span className={`visibility-badge ${item.visibility.toLowerCase()}`}>{item.visibility === 'Borrowable' ? 'Available to borrow' : item.visibility}</span><Heart className="heart" size={20} /></div>
+    <div className="visual-wrap"><ItemVisual item={item} deferred /><span className={`visibility-badge ${item.visibility.toLowerCase()}`}>{item.visibility === 'Borrowable' ? 'Available to borrow' : item.visibility}</span><Heart className="heart" size={20} /></div>
     <div className="item-info"><div><h3>{item.name}</h3><p>{item.brand || item.category}{item.size ? ` / Size ${item.size}` : ''}</p></div>{item.owner !== 'Brian' && <span className="owner">{item.owner.slice(0, 1)}</span>}</div>
   </button>
 }

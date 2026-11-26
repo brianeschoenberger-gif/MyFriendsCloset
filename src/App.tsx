@@ -17,6 +17,7 @@ import type { BorrowRequest, BorrowStatus, ClosetItem, Identity, OutfitLook, Pag
 import './App.css'
 
 const exampleIds = new Set(initialItems.map((item) => item.id))
+const galleryBatch = 24
 
 function App() {
   const inviteParams = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search)
@@ -42,6 +43,8 @@ function App() {
   const [closetVisibility, setClosetVisibility] = useState<ClosetFilters['visibility']>('Any')
   const [closetOrder, setClosetOrder] = useState<ClosetFilters['order']>('Recent')
   const closetSearchRef = useRef<HTMLInputElement>(null)
+  const closetGridRef = useRef<HTMLDivElement>(null)
+  const [galleryLimit, setGalleryLimit] = useState<{ key: string; count: number }>({ key: '', count: galleryBatch })
   const [toast, setToast] = useState('')
   const profile = profiles[identity]
 
@@ -52,6 +55,14 @@ function App() {
   const visibleOwnItems = useMemo(() => filterCloset(showSamples ? ownerItems : personalItems, {
     category, photoOnly, query: closetQuery, visibility: closetVisibility, order: closetOrder,
   }), [ownerItems, personalItems, showSamples, category, photoOnly, closetQuery, closetVisibility, closetOrder])
+  const galleryKey = JSON.stringify([showSamples, category, photoOnly, closetQuery, closetVisibility, closetOrder])
+  const resultLimit = galleryLimit.key === galleryKey ? galleryLimit.count : galleryBatch
+  const gallery = visibleOwnItems.slice(0, resultLimit)
+  function showMoreClothes(keyboard: boolean) {
+    const firstNew = gallery.length
+    setGalleryLimit({ key: galleryKey, count: resultLimit + galleryBatch })
+    if (keyboard) window.requestAnimationFrame(() => closetGridRef.current?.querySelectorAll<HTMLButtonElement>(':scope > button')[firstNew]?.focus())
+  }
   const activeFilters = category !== 'All' || photoOnly || showSamples || Boolean(closetQuery.trim()) || closetVisibility !== 'Any'
   function resetClosetFilters() { setCategory('All'); setPhotoOnly(false); setShowSamples(false); setClosetQuery(''); setClosetVisibility('Any') }
   function showPersonalPhotos() { resetClosetFilters(); setPhotoOnly(true) }
@@ -177,7 +188,9 @@ function App() {
         <label className="closet-search-field"><span>Search clothes</span><div><Search size={18} /><input type="search" ref={closetSearchRef} value={closetQuery} maxLength={100} placeholder="Try navy, linen, or dinner" onChange={(event) => setClosetQuery(event.target.value)} /></div></label>
         <label>Visibility<select value={closetVisibility} onChange={(event) => setClosetVisibility(event.target.value as ClosetFilters['visibility'])}><option value="Any">All visibility</option><option>Private</option><option>Friends</option><option>Borrowable</option></select></label>
         <label>Sort by<select value={closetOrder} onChange={(event) => setClosetOrder(event.target.value as ClosetFilters['order'])}><option>Recent</option><option>A–Z</option></select></label>
-      </div><div className="filter-row">{['All', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}<button className={photoOnly ? 'filter active' : 'filter'} aria-pressed={photoOnly} onClick={() => setPhotoOnly(!photoOnly)}>My photos only</button>{personalItems.length < ownerItems.length && <button className={showSamples ? 'filter active' : 'filter'} aria-pressed={showSamples} onClick={() => { if (!showSamples) setPhotoOnly(false); setShowSamples(!showSamples) }}>Include sample pieces</button>}</div><div className="closet-results-line"><span role="status">{visibleOwnItems.length} {visibleOwnItems.length === 1 ? 'piece' : 'pieces'} shown</span>{activeFilters && <button className="text-button" onClick={resetClosetFilters}>Clear filters</button>}</div>{visibleOwnItems.length ? <div className="item-grid">{visibleOwnItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div> : <div className="empty-state"><Shirt /><h3>{!personalItems.length && !activeFilters ? 'Your closet is empty' : 'No matching pieces'}</h3><p>{!personalItems.length && !activeFilters ? 'Start with a top and bottom, or a dress. The app will build from clothes you actually own.' : 'Change the filters, or photograph a piece to add it here.'}</p></div>}</section>}
+      </div><div className="filter-row">{['All', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}<button className={photoOnly ? 'filter active' : 'filter'} aria-pressed={photoOnly} onClick={() => setPhotoOnly(!photoOnly)}>My photos only</button>{personalItems.length < ownerItems.length && <button className={showSamples ? 'filter active' : 'filter'} aria-pressed={showSamples} onClick={() => { if (!showSamples) setPhotoOnly(false); setShowSamples(!showSamples) }}>Include sample pieces</button>}</div><div className="closet-results-line"><span role="status">{visibleOwnItems.length > gallery.length ? `Showing ${gallery.length} of ${visibleOwnItems.length} pieces` : `${gallery.length} ${gallery.length === 1 ? 'piece' : 'pieces'} shown`}</span>{activeFilters && <button className="text-button" onClick={resetClosetFilters}>Clear filters</button>}</div>{gallery.length ? <><div className="item-grid" id="closet-grid" ref={closetGridRef}>{gallery.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div>
+        {visibleOwnItems.length > gallery.length && <div className="closet-more"><button type="button" className="secondary-button" aria-controls="closet-grid" onClick={(event) => showMoreClothes(event.detail === 0)}>Show more clothes</button></div>}
+      </> : <div className="empty-state"><Shirt /><h3>{!personalItems.length && !activeFilters ? 'Your closet is empty' : 'No matching pieces'}</h3><p>{!personalItems.length && !activeFilters ? 'Start with a top and bottom, or a dress. The app will build from clothes you actually own.' : 'Change the filters, or photograph a piece to add it here.'}</p></div>}</section>}
       {page === 'friends' && (identity === 'friend' ? <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} /> : <section className="page-container"><PageHeading eyebrow="The good stuff" title="Friends' closets" subtitle="Borrow something with a story, not another shopping bag." /><div className="friend-strip">{friends.map((friend) => <button className="friend-pill" key={friend.name}><span className="avatar" style={{ background: friend.color }}>{friend.initials}</span><span><b>{friend.name}</b><small>{friend.count} pieces</small></span></button>)}</div><div className="section-heading inline"><div><p className="eyebrow">Palm Springs picks</p><h2>Shared with you</h2></div><BorrowableToggle value={borrowableOnly} setValue={setBorrowableOnly} /></div><div className="item-grid">{ownerFriendItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div></section>)}
       {page === 'requests' && <RequestsPage requests={requests} identity={identity} resolveRequest={resolveRequest} />}
       {identity === 'owner' && page === 'style' && <StylePage key={stylingAnchorId ?? "any"} initialAnchorId={stylingAnchorId} onItem={setSelectedItem} onAdd={() => setShowAdd(true)} items={ownerItems} saved={savedLooks} setSaved={setSavedLooks} storageError={looksStorageFailure} />}
