@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { hintColorFromImage } from './colorHint'
 
 export const storageKeys = {
@@ -43,17 +43,32 @@ export function isQuotaError(error: unknown) {
   )
 }
 
-export function usePersistentState<T>(key: string, fallback: T) {
+export function usePersistentState<T>(key: string, fallback: T, syncTabs = false) {
   const [value, setValue] = useState<T>(() => readStorage(key, fallback))
   const [storageFailure, setStorageFailure] = useState<StorageFailure | null>(null)
   const valueRef = useRef(value)
+  const initialFallback = useRef(fallback)
+
+  useEffect(() => {
+    if (!syncTabs) return
+    function receive(event: StorageEvent) {
+      if (event.key !== key || event.storageArea !== window.localStorage) return
+      const latest = readStorage(key, initialFallback.current)
+      if (Array.isArray(valueRef.current) && !Array.isArray(latest)) return
+      valueRef.current = latest
+      setValue(latest)
+    }
+    window.addEventListener('storage', receive)
+    return () => window.removeEventListener('storage', receive)
+  }, [key, syncTabs])
 
   const setPersistentValue = useCallback((action: T | ((current: T) => T)) => {
-    const nextValue = typeof action === 'function'
-      ? (action as (current: T) => T)(valueRef.current)
-      : action
-
     try {
+      const base = syncTabs ? readStorage(key, valueRef.current) : valueRef.current
+      const current = Array.isArray(valueRef.current) && !Array.isArray(base) ? valueRef.current : base
+      const nextValue = typeof action === 'function'
+        ? (action as (current: T) => T)(current)
+        : action
       window.localStorage.setItem(key, JSON.stringify(nextValue))
       valueRef.current = nextValue
       setValue(nextValue)
@@ -70,7 +85,7 @@ export function usePersistentState<T>(key: string, fallback: T) {
       })
       return false
     }
-  }, [key])
+  }, [key, syncTabs])
 
   return [value, setPersistentValue, storageFailure, () => setStorageFailure(null)] as const
 }

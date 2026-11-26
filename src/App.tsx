@@ -24,7 +24,7 @@ function App() {
   const inviteFriendMode = inviteParams?.get('invite') === 'MFC-BRIAN' && inviteParams.get('mode') === 'friend'
   const [identity, setIdentity] = usePersistentState<Identity>(storageKeys.identity, inviteFriendMode ? 'friend' : 'owner')
   const [items, setItems, itemStorageFailure, clearItemStorageFailure, wardrobeLoading] = useWardrobe(initialItems)
-  const [savedLooks, setSavedLooks, looksStorageFailure] = usePersistentState<OutfitLook[]>(storageKeys.savedLooks, [])
+  const [savedLooks, setSavedLooks, looksStorageFailure] = usePersistentState<OutfitLook[]>(storageKeys.savedLooks, [], true)
   const [requests, setRequests, requestStorageFailure, clearRequestStorageFailure] = usePersistentState<BorrowRequest[]>(storageKeys.requests, initialRequests)
   const [onboardingDismissed, setOnboardingDismissed] = usePersistentState(storageKeys.onboardingDismissed, inviteFriendMode)
   const [stylingAnchorId, setStylingAnchorId] = useState<number>()
@@ -216,7 +216,7 @@ function App() {
       if (!saved) return 'not-saved'
       const outfitPlan = mergeLookBackup(savedLooks, archive.looks, plan.ids, plan.items)
       const looksChanged = outfitPlan.added + outfitPlan.historyEdits > 0
-      if (looksChanged && !setSavedLooks(outfitPlan.looks)) return 'photos-only'
+      if (looksChanged && !setSavedLooks((latest) => mergeLookBackup(latest, archive.looks, plan.ids, plan.items).looks)) return 'photos-only'
       if (outfitPlan.skipped) return 'some-skipped'
       setShowBackup(false)
       showPersonalPhotos()

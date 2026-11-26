@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('two tabs in one browser see each wardrobe save without reloading or losing another tab’s piece', async ({ page, context }) => {
+test('two tabs in one browser share photos, saved looks and wear history without reloading', async ({ page, context }) => {
   const peer = await context.newPage()
   await page.goto('/')
   await peer.goto('/')
@@ -17,23 +17,39 @@ test('two tabs in one browser see each wardrobe save without reloading or losing
     await expect(tab.getByRole('heading', { name: 'Your closet is empty' })).toBeVisible()
   }
 
-  async function add(tab: typeof page, name: string) {
+  async function add(tab: typeof page, name: string, category = 'Tops') {
     await tab.getByRole('button', { name: 'Add from camera' }).click()
     await tab.getByLabel('Choose from photo library').setInputFiles({
       name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from(photo, 'base64'),
     })
     await expect(tab.getByAltText('New item preview')).toBeVisible()
     await tab.getByLabel('Item name').fill(name)
+    await tab.getByLabel('Category').selectOption(category)
     await tab.getByRole('button', { name: 'Save to my closet' }).click()
     await expect(tab.getByRole('heading', { name })).toBeVisible()
   }
 
   await add(page, 'Piece created in first tab')
   await expect(peer.getByRole('heading', { name: 'Piece created in first tab' })).toBeVisible()
-  await add(peer, 'Piece created in second tab')
+  await add(peer, 'Piece created in second tab', 'Bottoms')
   for (const tab of [page, peer]) {
     await expect(tab.getByRole('heading', { name: 'Piece created in first tab' })).toBeVisible()
     await expect(tab.getByRole('heading', { name: 'Piece created in second tab' })).toBeVisible()
   }
+  await add(page, 'Another top from first tab')
+  for (const tab of [page, peer]) {
+    await expect(tab.getByRole('heading', { name: 'Another top from first tab' })).toBeVisible()
+    await tab.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Style' }).click()
+    await tab.getByRole('button', { name: 'Build my looks' }).click()
+    await expect(tab.getByRole('button', { name: 'Save this look' })).toHaveCount(2)
+  }
+  await page.getByRole('button', { name: 'Save this look' }).first().click()
+  await expect(peer.getByRole('button', { name: 'Saved looks (1)' })).toBeVisible()
+  await peer.getByRole('button', { name: 'Save this look' }).click()
+  await expect(page.getByRole('button', { name: 'Saved looks (2)' })).toBeVisible()
+  await page.getByRole('button', { name: 'Saved looks (2)' }).click()
+  await peer.getByRole('button', { name: 'Saved looks (2)' }).click()
+  await peer.getByRole('button', { name: 'Mark worn today' }).first().click()
+  await expect(page.getByText('Last worn today · 1 day logged')).toBeVisible()
   await peer.close()
 })

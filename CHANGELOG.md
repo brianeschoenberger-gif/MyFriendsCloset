@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Saved looks and wear dates refresh in other tabs of the same browser. Before writing, read the latest local version so routine edits do not overwrite a stale tab snapshot.
+
 - Wardrobe edits now appear in other tabs of the same browser without uploading data or dropping pieces saved from the other tab.
 
 - Larger closets now render photos in groups and defer off-screen image decoding. Search still finds clothes outside the first group, and keyboard users are moved to the newly shown items.
