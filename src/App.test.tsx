@@ -60,14 +60,14 @@ describe('My Friends Closet playable beta', () => {
     const user = userEvent.setup()
     const first = render(<App />)
 
-    expect(screen.getByRole('heading', { name: 'Test the full owner-to-friend loop' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Start with six pieces' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Dismiss guide' }))
-    expect(screen.queryByRole('heading', { name: 'Test the full owner-to-friend loop' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Start with six pieces' })).not.toBeInTheDocument()
     expect(window.localStorage.getItem('mfc-beta-onboarding-dismissed-v1')).toBe('true')
 
     first.unmount()
     render(<App />)
-    expect(screen.queryByRole('heading', { name: 'Test the full owner-to-friend loop' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Start with six pieces' })).not.toBeInTheDocument()
   })
 
   it('copies an invite link for friend mode and honors the invite URL on load', async () => {
@@ -88,7 +88,16 @@ describe('My Friends Closet playable beta', () => {
     render(<App />)
     expect(screen.getByText('Friend mode')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: "Brian's closet" })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Test the full owner-to-friend loop' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Start with six pieces' })).not.toBeInTheDocument()
+  })
+
+  it('starts the actual wardrobe from home and never counts sample items as photos', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getByRole('button', { name: /0 photographed pieces/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add your first photos' }))
+    expect(screen.getByRole('heading', { name: 'My closet' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Add photos in bulk' })).toBeInTheDocument()
   })
 
   it('persists the full friend request and owner approval flow', async () => {
@@ -120,7 +129,7 @@ describe('My Friends Closet playable beta', () => {
   it('uses saved closet items when generating styled looks', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.click(screen.getByRole('button', { name: 'Style me for Saturday' }))
+    await user.click(screen.getByRole('button', { name: 'Try the stylist' }))
     await user.click(screen.getByRole('button', { name: 'Romantic' }))
     await user.click(screen.getByRole('checkbox', { name: 'Include labeled sample pieces' }))
     await user.click(screen.getByRole('button', { name: 'Build my looks' }))

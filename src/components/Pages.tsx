@@ -1,15 +1,37 @@
-import { ArrowRight, CalendarDays, Check, ChevronRight, Plus, Sparkles, Users, X } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, ChevronRight, Images, Plus, Sparkles, Users, X } from 'lucide-react'
 import { friendItems, friends, initialItems } from '../data/mockData'
 import type { BorrowRequest, ClosetItem, Identity, Page } from '../types'
 import { ItemCard, ItemVisual, PageHeading } from './ClosetUI'
+import { hasOutfitBase } from '../lib/aiLookExchange'
+import { photographedPieces } from '../lib/stylist'
 
-export function Dashboard({ navigate, items, requests, onItem }: { navigate: (page: Page) => void; items: ClosetItem[]; requests: BorrowRequest[]; onItem: (item: ClosetItem) => void }) {
+export function Dashboard({ navigate, items, requests, onItem, addPhotos }: { navigate: (page: Page) => void; items: ClosetItem[]; requests: BorrowRequest[]; onItem: (item: ClosetItem) => void; addPhotos: () => void }) {
+  const real = photographedPieces(items)
+  const isReady = hasOutfitBase(real)
+  const heroItem = real.at(-1) ?? initialItems[0]
   return <>
-    <section className="hero-section"><div className="hero-copy"><p className="eyebrow">Wednesday, June 10</p><h1>Your closet,<br /><em>but social.</em></h1><p>Share what you love. Borrow what you don't own. Get dressed with a little help from your friends.</p><div className="hero-actions"><button className="primary-button" onClick={() => navigate('style')}><Sparkles size={18} /> Style me for Saturday</button><button className="text-button" onClick={() => navigate('friends')}>Browse friends' closets <ArrowRight size={16} /></button></div></div>
-      <div className="hero-collage" aria-label="Featured closet items"><div className="collage-card one"><ItemVisual item={friendItems[0]} /><span>Maya's satin dress</span></div><div className="collage-card two"><ItemVisual item={items[0] ?? initialItems[0]} /><span>{items[0]?.name ?? 'Your first upload'}</span></div><div className="scribble">borrow<br />before<br />you buy</div></div></section>
-    <section className="stats-row page-container tight"><button onClick={() => navigate('closet')}><strong>{items.length}</strong><span>pieces in your closet</span><ChevronRight /></button><button onClick={() => navigate('closet')}><strong>{items.filter((item) => item.visibility === 'Borrowable').length}</strong><span>ready to borrow</span><ChevronRight /></button><button onClick={() => navigate('requests')}><strong>{requests.filter((request) => request.status === 'Pending').length}</strong><span>open requests</span><ChevronRight /></button></section>
-    <section className="page-container dashboard-section"><div className="section-heading inline"><div><p className="eyebrow">Fresh from the group</p><h2>Just shared</h2></div><button className="text-button" onClick={() => navigate('friends')}>See all <ArrowRight size={16} /></button></div><div className="item-grid feature-grid">{friendItems.slice(0, 4).map((item) => <ItemCard key={item.id} item={item} onClick={() => onItem(item)} />)}</div></section>
-    <section className="page-container event-banner"><div className="event-date"><span>JUN</span><strong>27</strong></div><div><p className="eyebrow">Upcoming event closet</p><h2>Palm Springs weekend</h2><p>4 friends / 18 shared pieces / 3 outfits waiting</p></div><div className="mini-avatars">{friends.map((friend) => <span key={friend.name} style={{ background: friend.color }}>{friend.initials}</span>)}</div><button className="secondary-button" onClick={() => navigate('event')}>Open event closet <ArrowRight size={16} /></button></section>
+    <section className="hero-section wardrobe-hero">
+      <div className="hero-copy"><p className="eyebrow">Your private wardrobe</p><h1>Your clothes.<br /><em>New outfits.</em></h1>
+        <p>{isReady ? 'Find a fresh combination from pieces you already have, or start with the one thing you know you want to wear.' : 'Start with a top and bottom, or a dress. Add shoes and a layer when you’re ready to see more combinations.'}</p>
+        <div className="hero-actions">
+          {isReady
+            ? <><button className="primary-button" onClick={() => navigate('style')}><Sparkles size={18} /> Build an outfit</button><button className="text-button" onClick={addPhotos}><Images size={16} /> Add more photos</button></>
+            : <><button className="primary-button" onClick={addPhotos}><Images size={18} /> Add your first photos</button><button className="text-button" onClick={() => navigate('style')}>Try the stylist</button></>}
+        </div>
+      </div>
+      <div className="hero-collage" aria-label={real.length ? 'Your latest and sample garments' : 'Example garments'}>
+        <div className="collage-card one"><ItemVisual item={friendItems[0]} /><span>Sample · Satin dress</span></div>
+        <div className="collage-card two"><ItemVisual item={heroItem} /><span>{real.length ? heroItem.name : 'Sample · Linen set'}</span></div>
+        <div className="scribble">wear<br />what<br />you own</div>
+      </div>
+    </section>
+    <section className="stats-row page-container tight">
+      <button aria-label={`${real.length} photographed ${real.length === 1 ? "piece" : "pieces"}`} onClick={() => navigate('closet')}><strong>{real.length}</strong><span>photographed {real.length === 1 ? 'piece' : 'pieces'}</span><ChevronRight /></button>
+      <button aria-label={isReady ? "Ready to build an outfit" : "Start with what you own"} onClick={() => navigate('style')}><strong>{isReady ? 'Ready' : 'Start'}</strong><span>{isReady ? 'to build an outfit' : 'with what you own'}</span><ChevronRight /></button>
+      <button onClick={() => navigate('requests')}><strong>{requests.filter((request) => request.status === 'Pending').length}</strong><span>local demo requests</span><ChevronRight /></button>
+    </section>
+    <section className="page-container dashboard-section"><div className="section-heading inline"><div><p className="eyebrow">Sample wardrobe</p><h2>Explore the friend demo</h2></div><button className="text-button" onClick={() => navigate('friends')}>See all <ArrowRight size={16} /></button></div><div className="item-grid feature-grid">{friendItems.slice(0, 4).map((item) => <ItemCard key={item.id} item={item} onClick={() => onItem(item)} />)}</div></section>
+    <section className="page-container event-banner"><div className="event-date"><span>JUN</span><strong>27</strong></div><div><p className="eyebrow">Sample event closet</p><h2>Palm Springs weekend</h2><p>4 friends / 18 shared pieces / 3 outfits waiting</p></div><div className="mini-avatars">{friends.map((friend) => <span key={friend.name} style={{ background: friend.color }}>{friend.initials}</span>)}</div><button className="secondary-button" onClick={() => navigate('event')}>Open event closet <ArrowRight size={16} /></button></section>
   </>
 }
 

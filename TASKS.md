@@ -48,6 +48,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Make current mode visible and switchable.
 - [x] Restrict friend view by item visibility.
 - [x] Add a first-run onboarding explanation.
+- [x] Introduce the actual photo wardrobe first, with a one-tap setup and clearly labeled samples.
 
 ### Mobile photo upload
 

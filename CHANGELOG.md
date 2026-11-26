@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Made the home screen lead with a real wardrobe, a six-piece setup, and an outfit-ready state. Clearly separated sample clothes and the local lending demo.
+
 - Added one-at-a-time garment swaps with comparable private pieces, a protected anchor, undo, and independent saving of the edited look.
 
 - Added closet search across garment details, visibility filters, and photo-first ordering. Added optional color hints computed from a photo on-device; the hint is never set without user input.

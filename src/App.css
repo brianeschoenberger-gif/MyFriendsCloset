@@ -118,3 +118,11 @@ body:has(.modal-backdrop) { overflow: hidden; }
 .swap-choices { display: grid; gap: .5rem; }
 .swap-choices label { display: grid; gap: .2rem; font-size: .9rem; font-weight: 600; }
 .swap-choices select { width: 100%; min-height: 44px; border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding-inline: .5rem; font-size: 1rem; }
+
+.wardrobe-hero .collage-card span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wardrobe-hero .hero-copy h1 { font-size: clamp(3rem, 8.3vw, 7.5rem); }
+.onboarding-actions { flex-wrap: wrap; }
+@media (max-width: 620px) {
+  .wardrobe-hero .hero-copy h1 { font-size: clamp(2.65rem, 10vw, 4rem); }
+  .wardrobe-hero .hero-copy > p:not(.eyebrow) { font-size: 1rem; }
+}

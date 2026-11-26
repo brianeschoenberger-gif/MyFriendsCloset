@@ -55,6 +55,7 @@ function App() {
   function notify(message: string) { setToast(message); window.setTimeout(() => setToast(''), 2600) }
   function switchIdentity(next: Identity) { setIdentity(next); setPage(next === 'friend' ? 'friends' : 'home'); setSelectedItem(null); setEditingItem(null); setShowAdd(false); setShowBulkAdd(false); setShowBackup(false); setRequestingItem(null); notify(`Continuing as ${profiles[next].name}`) }
   function dismissOnboarding() { setOnboardingDismissed(true) }
+  function startPhotoBatch() { navigate('closet'); setShowBulkAdd(true) }
 
   const inviteShareData = {
     title: 'My Friends Closet demo',
@@ -126,15 +127,16 @@ function App() {
       window.requestAnimationFrame(() => closetSearchRef.current?.focus())
     }}><Search size={19} /></button>}<div className="identity-switcher" aria-label="Demo identity"><button className={identity === 'owner' ? 'active' : ''} onClick={() => switchIdentity('owner')}>Brian</button><button className={identity === 'friend' ? 'active' : ''} onClick={() => switchIdentity('friend')}>Alex</button></div><span className="avatar self" aria-label={`Current identity: ${profile.name}`}>{profile.initials}</span></div></header>
     <div className={`identity-banner ${identity}`}><strong>{identity === 'owner' ? 'Owner mode' : 'Friend mode'}</strong><span>{identity === 'owner' ? 'Your photos stay in this browser. Sharing and requests are simulated.' : 'Demo friend view. No photos are shared to another device.'}</span></div>
-    {!onboardingDismissed && <OnboardingCard
+    {!onboardingDismissed && page === 'home' && <OnboardingCard
       identity={identity}
       switchIdentity={switchIdentity}
       dismiss={dismissOnboarding}
+      startPhotoBatch={startPhotoBatch}
     />}
     {(itemStorageFailure || requestStorageFailure) && <div className="storage-alert" role="alert"><div><strong>Not saved</strong><span>{itemStorageFailure?.message ?? requestStorageFailure?.message}</span></div><div><button onClick={() => { setIdentity('owner'); setPage('closet'); setSelectedItem(null) }}>Manage closet</button><button aria-label="Dismiss storage warning" onClick={() => { clearItemStorageFailure(); clearRequestStorageFailure() }}>Dismiss</button></div></div>}
     <main aria-busy={wardrobeLoading}>
       {wardrobeLoading && <p className="photo-local-note wardrobe-loading" role="status">Opening your wardrobe…</p>}
-      {page === 'home' && (identity === 'owner' ? <Dashboard navigate={navigate} items={ownerItems} requests={requests.filter((request) => request.ownerId === 'owner')} onItem={setSelectedItem} /> : <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} />)}
+      {page === 'home' && (identity === 'owner' ? <Dashboard addPhotos={startPhotoBatch} navigate={navigate} items={ownerItems} requests={requests.filter((request) => request.ownerId === 'owner')} onItem={setSelectedItem} /> : <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} />)}
       {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${ownerItems.length} saved pieces, ${ownerItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><div className="closet-add-actions"><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBackup(true)}><Download size={17} /> Backup</button><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBulkAdd(true)}><Images size={18} /> Add multiple photos</button><button className="primary-button" disabled={wardrobeLoading} onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></div></PageHeading><div className="closet-search-controls">
         <label className="closet-search-field"><span>Search clothes</span><div><Search size={18} /><input type="search" ref={closetSearchRef} value={closetQuery} maxLength={100} placeholder="Try navy, linen, or dinner" onChange={(event) => setClosetQuery(event.target.value)} /></div></label>
         <label>Visibility<select value={closetVisibility} onChange={(event) => setClosetVisibility(event.target.value as ClosetFilters['visibility'])}><option value="Any">All visibility</option><option>Private</option><option>Friends</option><option>Borrowable</option></select></label>
@@ -175,17 +177,21 @@ function FriendCloset({ items, borrowableOnly, setBorrowableOnly, onItem, copyIn
   return <section className="page-container"><PageHeading eyebrow="Shared with Alex" title="Brian's closet" subtitle="Only pieces Brian chose to share appear here. Borrowable pieces can be requested." /><div className="share-code"><div><span>Demo invite</span><strong>MFC-BRIAN</strong><small>Opens friend mode, not a live shared wardrobe. It never sends your photos.</small></div><div className="share-actions"><button className="secondary-button" onClick={() => void copyInviteLink()}><Copy size={16} /> Copy invite link</button><button className="secondary-button" onClick={() => void shareInviteLink()}><Share2 size={16} /> Share</button></div></div><div className="section-heading inline"><div><p className="eyebrow">Friend view</p><h2>{items.length ? 'Available from Brian' : 'Nothing shared yet'}</h2></div><BorrowableToggle value={borrowableOnly} setValue={setBorrowableOnly} /></div>{items.length ? <div className="item-grid">{items.map((item) => <ItemCard key={item.id} item={item} onClick={() => onItem(item)} />)}</div> : <div className="empty-state"><Shirt /><h3>Brian's shared rack is empty</h3><p>Switch to Brian, add an item, and mark it Friends or Borrowable.</p></div>}</section>
 }
 
-function OnboardingCard({ identity, switchIdentity, dismiss }: { identity: Identity; switchIdentity: (identity: Identity) => void; dismiss: () => void }) {
+function OnboardingCard({ identity, switchIdentity, dismiss, startPhotoBatch }: { identity: Identity; switchIdentity: (identity: Identity) => void; dismiss: () => void; startPhotoBatch: () => void }) {
+  const isOwner = identity === 'owner'
   return <section className="onboarding-card" aria-label="Beta onboarding">
     <div>
-      <p className="eyebrow">Playable beta walkthrough</p>
-      <h2>Test the full owner-to-friend loop</h2>
-      <p>Start as Brian to upload a photo and mark it Borrowable. Switch to Alex to request it, then come back to Brian to approve or decline.</p>
+      <p className="eyebrow">{isOwner ? 'Quick start' : 'Borrowing demo'}</p>
+      <h2>{isOwner ? 'Start with six pieces' : 'Test the owner-to-friend loop'}</h2>
+      <p>{isOwner
+        ? 'Pick two tops, two bottoms, a pair of shoes, and a layer. Save their photos, then build a look for one real occasion.'
+        : 'In this browser only, open a borrowable item, send a request, then go back to owner mode to approve it.'}</p>
     </div>
     <div className="onboarding-actions">
-      <button className="primary-button" onClick={() => switchIdentity(identity === 'owner' ? 'friend' : 'owner')}>
-        {identity === 'owner' ? 'Preview Alex mode' : 'Back to Brian mode'}
+      <button className="primary-button" onClick={isOwner ? startPhotoBatch : () => switchIdentity('owner')}>
+        {isOwner ? 'Set up my closet' : 'Back to Brian mode'}
       </button>
+      {isOwner && <button className="secondary-button" onClick={() => switchIdentity('friend')}>Preview Alex mode</button>}
       <button className="secondary-button" onClick={dismiss}>
         <X size={16} /> Dismiss guide
       </button>

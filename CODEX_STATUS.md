@@ -1,5 +1,5 @@
 # Current checkpoint · 2026-11-26
 
-- Shippable: bulk private wardrobe intake, search and color hints, durable local photos and backups, garment-anchor styling, optional ChatGPT look import, and one-piece swaps that preserve the anchor.
-- Verification: lint, unit tests, the production build and eight real Chromium flows passed. A physical iPhone and live ChatGPT account were not tested. Same-browser borrowing is simulated.
-- Next: simplify onboarding into a real six-piece capsule and make the home screen clearly separate your closet from the sample demo; then test time to first saved outfit.
+- Shippable: real-wardrobe homepage and six-piece quick start, bulk photos, color hints and search, private local storage/backup, an anchored outfit builder, one-piece swaps, and optional ChatGPT copy/paste with validated import.
+- No user wardrobe is uploaded; friend lending is still a same-browser demo. The live app and repo are public; its browser-local photos remain private to each browser.
+- Next: close the demo lending loop with date validation, conflict-aware approvals, and marking loans returned. Then add a local “wore this” signal and execute a privacy review before any real sync/auth work.

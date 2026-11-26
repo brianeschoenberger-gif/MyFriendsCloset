@@ -134,3 +134,5 @@ Manual AI handoff: 22 Vitest tests and seven Chromium Playwright flows passed, i
 Closet navigation: 26 Vitest tests and all seven real Chromium flows passed; the bulk mobile flow uses a suggested Navy color, then finds that garment through search. Ambiguous and transparent fixture photos do not get a color guess.
 
 Edit a look: eight real Chromium flows passed, including switching only a pair of pants in an anchored outfit, then saving and reopening the edited look. Tests also verify wrong-slot swaps and attempts to replace the selected anchor are rejected.
+
+Home quick start: the fixture checks that samples count as zero photos and the first-photo action opens the batch importer. Physical six-garment setup is still the next usability test.
