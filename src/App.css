@@ -155,3 +155,7 @@ body:has(.modal-backdrop) { overflow: hidden; }
 .closet-style-next .secondary-button { white-space: normal; }
 
 .closet-more { display: flex; justify-content: center; margin: 20px 0 0; }
+
+.delete-confirm { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.delete-confirm p { margin: 0 0 10px; }
+.delete-confirm button + button { margin-left: 8px; }

@@ -8,6 +8,7 @@ import { StylePage } from './components/StylePage'
 import { friendItems, friends, initialItems, initialRequests, profiles } from './data/mockData'
 import { storageKeys, usePersistentState } from './lib/storage'
 import { conflictingApproval } from './lib/borrowDates'
+import { requireCurrentPiece } from './lib/wardrobeStore'
 import { useWardrobe } from './lib/useWardrobe'
 import { hasOutfitBase } from './lib/aiLookExchange'
 import { closetGaps } from './lib/stylist'
@@ -109,15 +110,21 @@ function App() {
   }
 
   async function updateVisibility(item: ClosetItem, visibility: Visibility) {
-    const updatedAt = new Date().toISOString()
-    if (await setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, visibility, updatedAt } : entry))) {
-      setSelectedItem({ ...item, visibility, updatedAt })
+    let updated: ClosetItem | undefined
+    if (await setItems((current) => {
+      updated = { ...requireCurrentPiece(current, item, false), visibility, updatedAt: new Date().toISOString() }
+      return current.map((entry) => entry.id === item.id ? updated! : entry)
+    })) {
+      setSelectedItem(updated ?? null)
       notify(`Now ${visibility.toLowerCase()}`)
     }
   }
 
   async function deleteItem(item: ClosetItem) {
-    if (await setItems((current) => current.filter((entry) => entry.id !== item.id))) {
+    if (await setItems((current) => {
+      requireCurrentPiece(current, item)
+      return current.filter((entry) => entry.id !== item.id)
+    })) {
       setRequests((current) => current.filter((request) => request.itemId !== item.id))
       setSelectedItem(null)
       notify('Item deleted')
@@ -197,7 +204,7 @@ function App() {
       {page === 'event' && <EventPage onItem={setSelectedItem} />}
     </main>
     <nav className="mobile-nav" aria-label="Mobile navigation"><MobileNav icon={<Home />} label="Home" active={page === 'home'} onClick={() => navigate('home')} />{identity === 'owner' && <MobileNav icon={<Shirt />} label="Closet" active={page === 'closet'} onClick={() => navigate('closet')} />}<MobileNav icon={<Users />} label="Share" active={page === 'friends'} onClick={() => navigate('friends')} />{identity === 'owner' && <MobileNav icon={<Sparkles />} label="Style" active={page === 'style'} onClick={() => navigate('style')} />}<MobileNav icon={<CircleUserRound />} label="Requests" active={page === 'requests'} onClick={() => navigate('requests')} /></nav>
-    {selectedItem && <ItemModal item={selectedItem} own={identity === 'owner' && selectedItem.ownerId === 'owner'} canRequest={identity === 'friend' && selectedItem.ownerId === 'owner'} styleItem={identity === 'owner' ? (item) => { navigate('style'); setStylingAnchorId(item.id) } : undefined} editItem={(item) => { setSelectedItem(null); setEditingItem(item) }} close={() => setSelectedItem(null)} updateVisibility={updateVisibility} requestItem={(item) => { setSelectedItem(null); setRequestingItem(item) }} deleteItem={deleteItem} />}
+    {selectedItem && <ItemModal item={selectedItem} own={identity === 'owner' && selectedItem.ownerId === 'owner'} canRequest={identity === 'friend' && selectedItem.ownerId === 'owner'} styleItem={identity === 'owner' ? (item) => { navigate('style'); setStylingAnchorId(item.id) } : undefined} editItem={(item) => { clearItemStorageFailure(); setSelectedItem(null); setEditingItem(item) }} close={() => { clearItemStorageFailure(); setSelectedItem(null) }} updateVisibility={updateVisibility} requestItem={(item) => { setSelectedItem(null); setRequestingItem(item) }} deleteItem={deleteItem} writeConflict={itemStorageFailure?.kind === 'edit-conflict' ? itemStorageFailure.message : undefined} />}
     {showAdd && <AddItemModal close={() => setShowAdd(false)} save={async (item) => { const saved = await setItems((current) => [...current, { ...item, id: current.reduce((max, entry) => Math.max(max, entry.id + 1), item.id) }]); if (saved) { setShowAdd(false); if (page === 'closet') showPersonalPhotos(); notify('Saved to your closet') } return saved }} />}
     {showBulkAdd && identity === 'owner' && <BulkAddModal close={() => setShowBulkAdd(false)} save={async (drafts) => {
       const saved = await setItems((current) => {
@@ -223,8 +230,11 @@ function App() {
       notify(looksChanged ? 'Wardrobe and looks restored' : 'Wardrobe restored')
       return 'complete'
     }} />}
-    {editingItem && identity === 'owner' && <AddItemModal item={editingItem} close={() => setEditingItem(null)} save={async (updated) => {
-      const saved = await setItems((current) => current.map((item) => item.id === updated.id ? updated : item))
+    {editingItem && identity === 'owner' && <AddItemModal item={editingItem} writeConflict={itemStorageFailure?.kind === 'edit-conflict' ? itemStorageFailure.message : undefined} close={() => { clearItemStorageFailure(); setEditingItem(null) }} save={async (updated) => {
+      const saved = await setItems((current) => {
+        requireCurrentPiece(current, editingItem)
+        return current.map((item) => item.id === updated.id ? updated : item)
+      })
       if (saved) { setEditingItem(null); notify('Closet item updated') }
       return saved
     }} />}

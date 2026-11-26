@@ -4,6 +4,16 @@ export const wardrobeDatabase = 'mfc-wardrobe-v2'
 const bucket = 'wardrobe'
 const itemsKey = 'items'
 
+export class WardrobeEditConflict extends Error {
+  constructor() { super('This piece changed in another tab. Reopen it before saving your changes.') }
+}
+
+export function requireCurrentPiece(items: ClosetItem[], previous: ClosetItem, exactVersion = true) {
+  const latest = items.find((item) => item.id === previous.id)
+  if (!latest || (exactVersion && latest.updatedAt !== previous.updatedAt)) throw new WardrobeEditConflict()
+  return latest
+}
+
 export async function openWardrobeDatabase(): Promise<IDBDatabase> {
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(wardrobeDatabase, 1)

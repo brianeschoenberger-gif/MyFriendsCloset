@@ -70,7 +70,7 @@ Evidence: Vitest uses File objects and verifies one atomic multi-photo save, uni
 - [x] User can delete item.
 
 Score: 2/2
-Evidence: Automated tests cover creation, restoration, image metadata, and quota failure recovery; manual and component verification cover details and visibility. In a real Chromium browser, two tabs share each wardrobe save without a reload and without losing a piece saved by the other tab. The same flow verifies outfit saves and wear dates propagate between the tabs. Persistence is atomic, so rejected wardrobe writes do not produce false success UI. Delete is implemented with request cleanup.
+Evidence: Automated tests cover creation, restoration, image metadata, and quota failure recovery; manual and component verification cover details and visibility. In a real Chromium browser, two tabs share each wardrobe save without a reload and without losing a piece saved by the other tab. The same flow verifies outfit saves and wear dates propagate between the tabs. Persistence is atomic, so rejected wardrobe writes do not produce false success UI. Delete asks for confirmation and cleans up related demo requests. Browser coverage verifies cancel/confirm, and that a stale edit cannot erase a newer version saved by another tab.
 
 ### Visibility and sharing
 

@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Require confirmation before deleting a garment, and keep the newer version if an edit screen is stale because another tab saved first.
+
 - Saved looks and wear dates refresh in other tabs of the same browser. Before writing, read the latest local version so routine edits do not overwrite a stale tab snapshot.
 
 - Wardrobe edits now appear in other tabs of the same browser without uploading data or dropping pieces saved from the other tab.

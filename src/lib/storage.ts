@@ -13,6 +13,7 @@ export type StorageFailure = {
   key: string
   message: string
   isQuotaError: boolean
+  kind?: 'edit-conflict'
 }
 
 export type ImageProcessingResult = {

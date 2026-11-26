@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ClosetItem } from '../types'
 import { isQuotaError, storageKeys, type StorageFailure } from './storage'
-import { openWardrobeDatabase, readWardrobe, transactWardrobe } from './wardrobeStore'
+import { openWardrobeDatabase, readWardrobe, transactWardrobe, WardrobeEditConflict } from './wardrobeStore'
 
 const changeChannel = 'mfc-local-wardrobe-changes'
 const migratedKey = 'mfc-wardrobe-migrated-v2'
@@ -28,6 +28,7 @@ function retainMigrationMarker() {
 }
 
 function saveFailure(error: unknown, fallbackMessage?: string): StorageFailure {
+  if (error instanceof WardrobeEditConflict) return { key: storageKeys.items, kind: 'edit-conflict', isQuotaError: false, message: error.message }
   return {
     key: storageKeys.items,
     isQuotaError: isQuotaError(error),
