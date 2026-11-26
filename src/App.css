@@ -141,3 +141,6 @@ body:has(.modal-backdrop) { overflow: hidden; }
 }
 .look-card-download summary { cursor: pointer; font-weight: 650; min-height: 32px; }
 .look-card-download p { margin: 7px 0 12px; font-size: 0.9rem; }
+
+.bulk-color-action { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 10px 0 0; }
+.bulk-color-action p { margin: 0; font-size: .84rem; }

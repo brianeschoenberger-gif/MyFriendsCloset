@@ -308,7 +308,7 @@ test('saves a wardrobe larger than the usual localStorage quota', async ({ page 
   expect(bytes).toBeGreaterThan(5_242_880)
   await page.reload()
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
-  await expect(page.getByRole('heading', { name: 'Top', exact: true })).toHaveCount(12)
+  await expect(page.getByRole('heading', { name: /^Top [1-9][0-9]*$/ })).toHaveCount(12)
 })
 
 test('reviews a text-only AI prompt and safely imports a response with real closet pieces', async ({ page }) => {
@@ -414,6 +414,14 @@ test('home and quick intake fit small phones through desktop, with keyboard focu
   await page.keyboard.press('Escape')
   await expect(dialog).toHaveCount(0)
 
+  await expect(page.getByRole('heading', { name: 'Your closet is empty' })).toBeVisible()
+  await expect(page.getByText('0 saved pieces, 0 ready to borrow.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Ivory linen set' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Include sample pieces' }).click()
+  await expect(page.getByRole('heading', { name: 'Ivory linen set' })).toBeVisible()
+  await page.getByRole('button', { name: 'Clear filters' }).click()
+  await expect(page.getByRole('heading', { name: 'Your closet is empty' })).toBeVisible()
+
   const bulk = page.getByRole('button', { name: 'Add multiple photos' })
   await bulk.focus()
   await page.keyboard.press('Enter')
@@ -446,6 +454,13 @@ test('new user can style six owned photos for an occasion and download a local o
   for (const [i, category] of ['Tops', 'Tops', 'Bottoms', 'Bottoms', 'Shoes', 'Jackets'].entries()) {
     await dialog.getByLabel(`Category for photo ${i + 1}`).selectOption(category)
   }
+  await expect(dialog.getByText('6 of 6 ready to save')).toBeVisible()
+  await expect(dialog.getByLabel('Name for photo 1')).toHaveAttribute('placeholder', 'Top 1')
+  await expect(dialog.getByLabel('Name for photo 2')).toHaveAttribute('placeholder', 'Top 2')
+  await dialog.getByLabel('Color for photo 1').fill('My custom color')
+  await dialog.getByRole('button', { name: 'Use 5 suggested colors' }).click()
+  await expect(dialog.getByLabel('Color for photo 1')).toHaveValue('My custom color')
+  await expect(dialog.getByLabel('Color for photo 2')).toHaveValue('Blue')
   await dialog.getByRole('button', { name: 'Save 6 private pieces' }).click()
   await expect(dialog).toHaveCount(0)
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Style' }).click()

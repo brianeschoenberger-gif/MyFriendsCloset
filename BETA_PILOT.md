@@ -4,7 +4,7 @@
 
 Use a physical phone, the public app, and a real upcoming occasion. Start with two tops, two bottoms, one pair of shoes and one jacket, or use dresses that fit the occasion. These are private photos on that phone, not test submissions.
 
-1. From Home, tap **Add your first photos**. Choose the six photos together, confirm categories, and skip names and colors if you're in a hurry.
+1. From Home, tap **Add your first photos**. Choose the six photos together, confirm categories, and skip names and colors if you're in a hurry. Include one original iPhone camera photo from the Photo Library. Check that it appears upright and survives reopening Safari. If it fails, compare a JPEG export of the same photo to isolate the problem.
 2. Enter the real occasion in **Style** and build looks. Start a clock at the first photo and note when the first *wearable* result appears, not just the first result.
 3. If it's close, swap one piece. Save a look you'd wear. Return on the day and mark it worn only if you actually wore it.
 4. Note the biggest snag: capture, tagging, trust, styling quality, or something else. If no look felt wearable, write down why. Try the same occasion with the separate ChatGPT handoff only if you want to compare.

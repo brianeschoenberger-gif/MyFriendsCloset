@@ -15,7 +15,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Validate the six-piece cold start and a downloadable outfit card at phone width.
 - [ ] Try on a physical iPhone with six real garments. Track time to first useful look, save/wear, and return within one week.
 - [x] Add private-by-default multi-photo import with category review.
-- [x] Add private, editable color-tag hints on single and batch photos.
+- [x] Add private, editable color-tag hints on single and batch photos; accept a batch of hints without touching a manual tag.
 - [ ] Evaluate whether automatic category hints are necessary after real photo trials.
 - [x] Export a local wardrobe archive; preview and restore into an existing closet safely, including personal-photo saved looks and wear history.
 - [ ] Add private sync and real invite permissions before testing cross-device lending.

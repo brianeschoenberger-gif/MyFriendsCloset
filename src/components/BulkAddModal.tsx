@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Images, Trash2, X } from 'lucide-react'
+import { makeBatchLabels } from '../lib/bulkLabels'
 import { useDialogFocus } from '../lib/useDialogFocus'
 import { prepareImageForStorage, type ImageProcessingResult } from '../lib/storage'
 import type { ClosetItem } from '../types'
@@ -16,6 +17,14 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const dialog = useDialogFocus<HTMLFormElement>(close, processing || saving)
+  const ready = drafts.filter((draft) => draft.category).length
+  const colorHintCount = drafts.filter((draft) => !draft.color.trim() && draft.photo.colorHint).length
+  const defaultNames = makeBatchLabels(drafts)
+
+  function useColorHints() {
+    setDrafts((current) => current.map((draft) => !draft.color.trim() && draft.photo.colorHint
+      ? { ...draft, color: draft.photo.colorHint } : draft))
+  }
 
   async function addFiles(files: File[]) {
     const remaining = limit - drafts.length
@@ -49,13 +58,12 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
       event.preventDefault()
       if (!drafts.length || processing || saving || drafts.some((draft) => !draft.category)) return
       const now = new Date().toISOString()
-      const pieces = drafts.map(({ name, category, color, photo }): Omit<ClosetItem, 'id'> => {
+      const pieces = drafts.map(({ category, color, photo }, index): Omit<ClosetItem, 'id'> => {
         const { dataUrl, originalBytes, storedBytes, width, height, compressed } = photo
         const imageMeta = { originalBytes, storedBytes, width, height, compressed }
-        const singular = category === 'Accessories' ? 'Accessory' : ['Bottoms', 'Shoes'].includes(category) ? category : category.slice(0, -1)
         return {
           ownerId: 'owner', owner: 'Brian', imageData: dataUrl, imageMeta,
-          name: name.trim() || [color.trim(), singular].filter(Boolean).join(' '),
+          name: defaultNames[index],
           category, color: color.trim(), size: '', brand: '', occasionTags: [], notes: '',
           visibility: 'Private', glyph: 'PHOTO', createdAt: now, updatedAt: now,
         }
@@ -78,6 +86,7 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
       </label>
       {processing && <p role="status">Preparing photos…</p>}
       {errors.length > 0 && <ul className="form-error bulk-errors" role="alert">{errors.map((error, index) => <li key={index}>{error}</li>)}</ul>}
+      {colorHintCount > 1 && <div className="bulk-color-action"><button type="button" className="secondary-button" onClick={useColorHints} disabled={processing || saving}>Use {colorHintCount} suggested colors</button><p>Estimated on this device. You can edit each one.</p></div>}
       <div className="bulk-drafts">{drafts.map((draft, index) => <fieldset className="bulk-draft" key={draft.id}>
         <legend className="sr-only">Photo {index + 1}</legend>
         <img src={draft.photo.dataUrl} alt={`Clothing photo ${index + 1}`} />
@@ -85,14 +94,14 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
           <label>Category<select required value={draft.category} aria-label={`Category for photo ${index + 1}`} onChange={(event) => update(draft.id, { category: event.target.value })}>
             <option value="">Choose one</option>{categories.map((category) => <option key={category}>{category}</option>)}
           </select></label>
-          <label>Name<input maxLength={80} value={draft.name} aria-label={`Name for photo ${index + 1}`} placeholder="Optional" onChange={(event) => update(draft.id, { name: event.target.value })} /></label>
+          <label>Name<input maxLength={80} value={draft.name} aria-label={`Name for photo ${index + 1}`} placeholder={draft.category ? defaultNames[index] : "Optional"} onChange={(event) => update(draft.id, { name: event.target.value })} /></label>
           <label>Color<input maxLength={35} value={draft.color} aria-label={`Color for photo ${index + 1}`} placeholder="Optional" onChange={(event) => update(draft.id, { color: event.target.value })} /></label>
           {draft.photo.colorHint && !draft.color.trim() && <button type="button" className="color-hint" onClick={() => update(draft.id, { color: draft.photo.colorHint! })}>Use {draft.photo.colorHint} for photo {index + 1}</button>}
         </div>
         <button type="button" className="icon-button bulk-remove" aria-label={`Remove photo ${index + 1}`} onClick={() => setDrafts((current) => current.filter(({ id }) => id !== draft.id))}><Trash2 size={19} /></button>
       </fieldset>)}</div>
       <div className="bulk-footer">
-        <span>{drafts.length} of {limit} photos</span>
+        <span aria-live="polite">{drafts.length ? `${ready} of ${drafts.length} ready to save` : `Up to ${limit} photos`}</span>
         <button className="primary-button" type="submit" disabled={processing || saving || !drafts.length || drafts.some((draft) => !draft.category)}>
           {saving ? 'Saving…' : drafts.length === 1 ? 'Save 1 private piece' : `Save ${drafts.length} private pieces`}
         </button>
