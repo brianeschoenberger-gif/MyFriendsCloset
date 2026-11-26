@@ -388,3 +388,36 @@ test('swaps one photographed garment without changing the anchor and saves the e
   await page.getByRole('button', { name: 'Wore it today' }).click()
   await expect(page.getByRole('button', { name: 'Mark worn today' })).toHaveAttribute('aria-pressed', 'false')
 })
+
+test('home and quick intake fit small phones through desktop, with keyboard focus contained', async ({ page }) => {
+  await page.goto('/')
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 820 })
+    await expect(page.getByRole('heading', { name: /Your clothes.*New outfits/ })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  }
+
+  await page.setViewportSize({ width: 320, height: 740 })
+  const start = page.getByRole('button', { name: 'Add your first photos' })
+  await start.focus()
+  await page.keyboard.press('Enter')
+  const dialog = page.getByRole('dialog', { name: 'Add photos in bulk' })
+  await expect(dialog).toBeVisible()
+  const close = dialog.getByRole('button', { name: 'Close photo batch' })
+  const picker = dialog.getByLabel('Choose multiple clothing photos')
+  await expect(close).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
+  await expect(picker).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(close).toBeFocused()
+  expect(await dialog.evaluate((box) => box.scrollWidth <= box.clientWidth)).toBe(true)
+  await page.keyboard.press('Escape')
+  await expect(dialog).toHaveCount(0)
+
+  const bulk = page.getByRole('button', { name: 'Add multiple photos' })
+  await bulk.focus()
+  await page.keyboard.press('Enter')
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(bulk).toBeFocused()
+})

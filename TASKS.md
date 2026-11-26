@@ -21,6 +21,8 @@ The app must work on a phone well enough that the owner can add real clothing ph
 
 ## Quality harness tasks
 
+- [x] Contain keyboard focus in wardrobe dialogs, dismiss with Escape, and restore focus to the opener; verify at a 320px viewport.
+
 - [x] Create BETA_CHECKLIST.md.
 - [x] Score the current app and add evidence for each category.
 - [x] Identify and improve Style Me as the lowest-scoring product area.

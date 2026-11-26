@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Download, Upload, X } from 'lucide-react'
+import { useDialogFocus } from '../lib/useDialogFocus'
 import { makeWardrobeBackup, maxBackupBytes, mergeWardrobeBackup, parseWardrobeBackup } from '../lib/wardrobeBackup'
 import type { ClosetItem } from '../types'
 
@@ -8,8 +9,7 @@ export function WardrobeBackupModal({ items, close, restore }: { items: ClosetIt
   const [error, setError] = useState('')
   const [working, setWorking] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
-  const closeRef = useRef<HTMLButtonElement>(null)
-  useEffect(() => { closeRef.current?.focus() }, [])
+  const dialog = useDialogFocus<HTMLElement>(close, working)
   const candidateCount = items.filter((item) => item.ownerId === 'owner' && item.imageData).length
   const addCount = incoming.length ? mergeWardrobeBackup(items, incoming).length - items.length : 0
 
@@ -49,9 +49,9 @@ export function WardrobeBackupModal({ items, close, restore }: { items: ClosetIt
     } finally { setWorking(false) }
   }
 
-  return <div className="modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !working) close() }}>
-    <section className="add-modal backup-modal" role="dialog" aria-modal="true" aria-labelledby="backup-heading">
-      <button className="modal-close" onClick={close} ref={closeRef} aria-label="Close wardrobe backup"><X /></button>
+  return <div className="modal-backdrop">
+    <section className="add-modal backup-modal" ref={dialog} data-closet-dialog tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="backup-heading">
+      <button className="modal-close" onClick={close} data-dialog-initial aria-label="Close wardrobe backup"><X /></button>
       <p className="eyebrow">On this device</p>
       <h2 id="backup-heading">Wardrobe backup</h2>
       <p>Save a copy of your clothing photos and details, or bring them to another device. It does not include saved looks, borrow requests, or demo pieces.</p>

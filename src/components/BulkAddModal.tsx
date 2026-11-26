@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Images, Trash2, X } from 'lucide-react'
+import { useDialogFocus } from '../lib/useDialogFocus'
 import { prepareImageForStorage, type ImageProcessingResult } from '../lib/storage'
 import type { ClosetItem } from '../types'
 
@@ -14,12 +15,7 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
   const [processing, setProcessing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
-  const fileInput = useRef<HTMLInputElement>(null)
-  const closeRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    closeRef.current?.focus()
-  }, [])
+  const dialog = useDialogFocus<HTMLFormElement>(close, processing || saving)
 
   async function addFiles(files: File[]) {
     const remaining = limit - drafts.length
@@ -48,8 +44,8 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
     setDrafts((current) => current.map((draft) => draft.id === id ? { ...draft, ...fields } : draft))
   }
 
-  return <div className="modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !processing) close() }}>
-    <form className="add-modal bulk-modal" role="dialog" aria-modal="true" aria-labelledby="bulk-heading" onSubmit={async (event) => {
+  return <div className="modal-backdrop">
+    <form className="add-modal bulk-modal" ref={dialog} data-closet-dialog tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="bulk-heading" onSubmit={async (event) => {
       event.preventDefault()
       if (!drafts.length || processing || saving || drafts.some((draft) => !draft.category)) return
       const now = new Date().toISOString()
@@ -69,12 +65,12 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
       setSaving(false)
       if (!saved) setErrors(['Nothing in this batch was saved. Free browser space, or remove a few photos from this batch and try again.'])
     }}>
-      <button type="button" className="modal-close" ref={closeRef} onClick={close} disabled={processing || saving} aria-label="Close photo batch"><X /></button>
+      <button type="button" className="modal-close" data-dialog-initial onClick={close} disabled={processing || saving} aria-label="Close photo batch"><X /></button>
       <p className="eyebrow">Your wardrobe</p>
       <h2 id="bulk-heading">Add photos in bulk</h2>
       <p className="photo-local-note">Pick up to {limit} photos. Choose a category for each; names and colors are optional. All items start private and stay in this browser.</p>
       <label className="gallery-picker"><Images size={18} /> Choose photos
-        <input ref={fileInput} className="file-input" type="file" multiple accept="image/*" aria-label="Choose multiple clothing photos" disabled={processing || drafts.length >= limit} onChange={(event) => {
+        <input className="file-input" type="file" multiple accept="image/*" aria-label="Choose multiple clothing photos" disabled={processing || drafts.length >= limit} onChange={(event) => {
           const files = Array.from(event.currentTarget.files ?? [])
           event.currentTarget.value = ''
           void addFiles(files)
