@@ -9,6 +9,8 @@ import { friendItems, friends, initialItems, initialRequests, profiles } from '.
 import { storageKeys, usePersistentState } from './lib/storage'
 import { conflictingApproval } from './lib/borrowDates'
 import { useWardrobe } from './lib/useWardrobe'
+import { hasOutfitBase } from './lib/aiLookExchange'
+import { closetGaps } from './lib/stylist'
 import { filterCloset, type ClosetFilters } from './lib/closetSearch'
 import { mergeLookBackup, planWardrobeRestore } from './lib/wardrobeBackup'
 import type { BorrowRequest, BorrowStatus, ClosetItem, Identity, OutfitLook, Page, Visibility } from './types'
@@ -45,6 +47,8 @@ function App() {
 
   const ownerItems = useMemo(() => items.filter((item) => item.ownerId === 'owner'), [items])
   const personalItems = useMemo(() => ownerItems.filter((item) => item.imageData || !exampleIds.has(item.id)), [ownerItems])
+  const personalPhotos = useMemo(() => personalItems.filter((item) => item.imageData), [personalItems])
+  const readyToStyle = hasOutfitBase(personalPhotos)
   const visibleOwnItems = useMemo(() => filterCloset(showSamples ? ownerItems : personalItems, {
     category, photoOnly, query: closetQuery, visibility: closetVisibility, order: closetOrder,
   }), [ownerItems, personalItems, showSamples, category, photoOnly, closetQuery, closetVisibility, closetOrder])
@@ -161,7 +165,15 @@ function App() {
     <main aria-busy={wardrobeLoading}>
       {wardrobeLoading && <p className="photo-local-note wardrobe-loading" role="status">Opening your wardrobe…</p>}
       {page === 'home' && (identity === 'owner' ? <Dashboard addPhotos={startPhotoBatch} navigate={navigate} items={ownerItems} requests={requests.filter((request) => request.ownerId === 'owner')} onItem={setSelectedItem} /> : <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} />)}
-      {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${personalItems.length} saved ${personalItems.length === 1 ? 'piece' : 'pieces'}, ${personalItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><div className="closet-add-actions"><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBackup(true)}><Download size={17} /> Backup</button><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBulkAdd(true)}><Images size={18} /> Add multiple photos</button><button className="primary-button" disabled={wardrobeLoading} onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></div></PageHeading><div className="closet-search-controls">
+      {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${personalItems.length} saved ${personalItems.length === 1 ? 'piece' : 'pieces'}, ${personalItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><div className="closet-add-actions"><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBackup(true)}><Download size={17} /> Backup</button><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBulkAdd(true)}><Images size={18} /> Add multiple photos</button><button className="primary-button" disabled={wardrobeLoading} onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></div></PageHeading>
+      {photoOnly && personalPhotos.length > 0 && !wardrobeLoading && <section className="closet-style-next" aria-label="Next step for your photos">
+        <div><strong>{readyToStyle ? 'Your photos are ready to style' : 'One step closer to an outfit'}</strong>
+          <p>{readyToStyle ? 'Pick a real occasion and see what you can make from these clothes.' : closetGaps(personalPhotos)}</p></div>
+        <button className="secondary-button" onClick={readyToStyle ? () => navigate('style') : () => setShowBulkAdd(true)}>
+          {readyToStyle ? <Sparkles size={16} /> : <Images size={16} />}{readyToStyle ? 'Style my photos' : 'Add more photos'}
+        </button>
+      </section>}
+      <div className="closet-search-controls">
         <label className="closet-search-field"><span>Search clothes</span><div><Search size={18} /><input type="search" ref={closetSearchRef} value={closetQuery} maxLength={100} placeholder="Try navy, linen, or dinner" onChange={(event) => setClosetQuery(event.target.value)} /></div></label>
         <label>Visibility<select value={closetVisibility} onChange={(event) => setClosetVisibility(event.target.value as ClosetFilters['visibility'])}><option value="Any">All visibility</option><option>Private</option><option>Friends</option><option>Borrowable</option></select></label>
         <label>Sort by<select value={closetOrder} onChange={(event) => setClosetOrder(event.target.value as ClosetFilters['order'])}><option>Recent</option><option>A–Z</option></select></label>

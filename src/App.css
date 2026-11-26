@@ -146,3 +146,10 @@ body:has(.modal-backdrop) { overflow: hidden; }
 .bulk-color-action p { margin: 0; font-size: .84rem; }
 
 .fresh-toggle { margin-top: -.25rem; }
+
+.closet-style-next {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 12px; margin: 0 0 18px; padding: 16px 18px; border: 1px solid #ead7c5; border-radius: 15px; background: #fcf4ec;
+}
+.closet-style-next p { margin: .25rem 0 0; font-size: .9rem; }
+.closet-style-next .secondary-button { white-space: normal; }
