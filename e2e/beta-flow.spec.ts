@@ -316,13 +316,13 @@ test('saves a wardrobe larger than the usual localStorage quota', async ({ page 
   await expect(page.getByRole('heading', { name: /^Top [1-9][0-9]*$/ })).toHaveCount(12)
 })
 
-test('reviews a text-only AI prompt and safely imports a response with real closet pieces', async ({ page }) => {
+test('reviews the optional private prompt and compares a valid imported look with local styling', async ({ page }) => {
   await page.addInitScript(() => {
     if (sessionStorage.getItem('seeded-ai')) return
     sessionStorage.setItem('seeded-ai', '1')
-    const photos = ['Office top', 'Work trousers'].map((name, index) => ({
-      id: index + 111, name, ownerId: 'owner', owner: 'Test', category: index ? 'Bottoms' : 'Tops', color: index ? 'Navy' : 'Cream',
-      visibility: 'Private', size: 'SECRET_SIZE', brand: '', glyph: 'PHOTO', occasionTags: [], notes: 'SECRET_NOTE',
+    const photos = ['Office top', 'Work trousers', 'Alternative shirt'].map((name, index) => ({
+      id: index + 111, name, ownerId: 'owner', owner: 'Test', category: index === 1 ? 'Bottoms' : 'Tops', color: index ? 'Navy' : 'Cream',
+      visibility: 'Private', size: 'SECRET_SIZE', brand: '', glyph: 'PHOTO', occasionTags: index === 2 ? ['Work'] : [], notes: 'SECRET_NOTE',
       imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNgAAAAAgABSK+kcQAAAABJRU5ErkJggg==',
       createdAt: '2026-11-25T00:00:00.000Z', updatedAt: '2026-11-25T00:00:00.000Z',
     }))
@@ -333,7 +333,16 @@ test('reviews a text-only AI prompt and safely imports a response with real clos
   await nav.getByRole('button', { name: 'Style' }).click()
   await page.getByLabel('Occasion').fill('Work meeting')
   await page.getByRole('button', { name: 'Try a ChatGPT look' }).click()
-  const prompt = await page.getByLabel('1. Review and copy the prompt').inputValue()
+  const review = page.getByLabel('1. Review and copy the prompt')
+  const withNames = await review.inputValue()
+  expect(withNames).toContain('Office top')
+  await page.getByRole('checkbox', { name: 'Keep my garment names out of this prompt' }).check()
+  const fewerDetails = await review.inputValue()
+  expect(fewerDetails).not.toMatch(/Office top|Work trousers|Alternative shirt/)
+  expect(fewerDetails).toContain('Tops')
+  await page.getByRole('checkbox', { name: 'Keep my garment names out of this prompt' }).uncheck()
+  const prompt = await review.inputValue()
+  expect(prompt).not.toBe(withNames)
   expect(prompt).not.toMatch(/SECRET|iVBOR|localId/)
   const { requestId, clothes } = JSON.parse(prompt.split('WARDROBE DATA:\n\n')[1])
   const input = page.getByLabel('2. Paste the ChatGPT reply')
@@ -341,10 +350,19 @@ test('reviews a text-only AI prompt and safely imports a response with real clos
   await input.fill(JSON.stringify({ requestId, looks: [{ pieces: ['P1', 'P99'], why: 'Invalid item' }] }))
   await importButton.click()
   await expect(page.getByText(/not in the shared list/)).toBeVisible()
-  await input.fill(JSON.stringify({ requestId, looks: [{ pieces: clothes.map((item: { code: string }) => item.code), why: 'A neutral work palette.' }] }))
+  await input.fill(JSON.stringify({ requestId, looks: [{ pieces: clothes.filter((item: { name: string }) => item.name !== 'Alternative shirt').map((item: { code: string }) => item.code), why: 'A neutral work palette.' }] }))
   await importButton.click()
   await expect(page.getByRole('heading', { name: 'Your imported looks are ready' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Office top + Work trousers' })).toBeVisible()
+  await page.getByRole('button', { name: 'Compare with the built-in stylist' }).click()
+  const compare = page.getByRole('region', { name: 'Compare two outfit picks' })
+  await expect(compare.getByRole('heading', { name: 'Which would you wear?' })).toBeVisible()
+  await expect(compare.getByText('ChatGPT import', { exact: true })).toHaveCount(0)
+  await compare.getByRole('button', { name: 'I’d wear look A' }).click()
+  await expect(compare.getByText('ChatGPT import', { exact: true })).toBeVisible()
+  await expect(compare.getByText('Built-in stylist', { exact: true })).toBeVisible()
+  await expect(compare.getByRole('status')).toHaveText('You picked look A. The sources are now shown above.')
+  await compare.getByRole('button', { name: 'Back to imported looks' }).click()
   await page.getByRole('button', { name: 'Save this look' }).click()
   await page.reload()
   await nav.getByRole('button', { name: 'Style' }).click()

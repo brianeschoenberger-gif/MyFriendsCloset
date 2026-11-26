@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Added an optional first-pick comparison between the built-in stylist and an imported ChatGPT result, with sources shown after choosing and no votes saved. The prompt can also omit custom garment names while preserving category/color and validated outfit assembly.
+
 - Require confirmation before deleting a garment, and keep the newer version if an edit screen is stale because another tab saved first.
 
 - Saved looks and wear dates refresh in other tabs of the same browser. Before writing, read the latest local version so routine edits do not overwrite a stale tab snapshot.

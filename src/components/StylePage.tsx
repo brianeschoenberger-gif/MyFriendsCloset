@@ -12,8 +12,10 @@ import { combinationKey, dateLabel, displayWearDate, recentlyWornSignatures, tog
 import { hasOutfitBase } from '../lib/aiLookExchange'
 import { canMakeLookCard } from '../lib/lookCard'
 import { LookCardDownload } from './LookCardDownload'
+import { randomizedLookComparison, type LookComparison } from '../lib/compareLooks'
+import { LookComparisonPanel } from './LookComparisonPanel'
 
-type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean; preferFresh?: boolean }
+type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean; sharedItemIds?: number[]; preferFresh?: boolean }
 
 type StylePageProps = {
   onItem: (item: ClosetItem) => void
@@ -36,6 +38,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
   const [showAI, setShowAI] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
   const [preferFresh, setPreferFresh] = useState(false)
+  const [comparison, setComparison] = useState<LookComparison | null>(null)
   const realPieces = photographedPieces(items)
   const anchor = realPieces.find((piece) => piece.id === anchorId)
   const demoPieces = [...items.filter((item) => !item.imageData), ...friendItems.filter((item) => item.visibility === 'Borrowable')]
@@ -52,11 +55,20 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
   const aiReady = hasOutfitBase(realPieces, anchor?.id)
 
   function handleGenerate() {
+    setComparison(null)
     const preferences = currentPreferences
     setDraftSwaps({})
     const requestedFresh = preferFresh && recentWear.size > 0
     setResult({ looks: suggestLooks(source, preferences, 3, anchor?.id, requestedFresh ? recentWear : undefined), preferences, gaps: closetGaps(source, anchor?.id), demo: includeDemo, preferFresh: requestedFresh })
     setShowSaved(false)
+  }
+
+  function compareResults() {
+    const imported = visibleLooks[0]
+    if (!result?.ai || !imported) return
+    const shared = new Set(result.sharedItemIds)
+    const local = suggestLooks(realPieces.filter((piece) => shared.has(piece.id)), result.preferences, 1, imported.anchorId)[0]
+    if (local) setComparison(randomizedLookComparison(local, imported))
   }
 
   function toggleSave(look: OutfitLook) {
@@ -78,26 +90,30 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
           setAnchorId(event.target.value ? Number(event.target.value) : undefined)
           setResult(null)
           setShowSaved(false)
+          setComparison(null)
         }}><option value="">Any saved piece</option>{realPieces.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.category}</option>)}</select></label>
         {anchor && <div className="style-anchor-piece"><ItemVisual item={anchor} compact /><p><strong>{anchor.name}</strong><br />Every outfit will include this piece.</p></div>}
       </div>}
-      <div className="style-source"><div><strong>{realPieces.length} photographed {realPieces.length === 1 ? 'piece' : 'pieces'}</strong><button type="button" className="text-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div><label className="demo-toggle"><input type="checkbox" checked={includeDemo} onChange={(event) => { setIncludeDemo(event.target.checked); setResult(null) }} /><span>Include labeled sample pieces</span></label></div>
-      {recentWear.size > 0 && <label className="demo-toggle fresh-toggle"><input type="checkbox" checked={preferFresh} onChange={(event) => { setPreferFresh(event.target.checked); setResult(null) }} /><span>Prefer outfits I haven’t worn in the last 7 days</span></label>}
-      <div className="style-submit"><button className="primary-button generate" type="submit"><Sparkles size={19} /> Build my looks</button><button type="button" className="secondary-button" aria-pressed={showSaved} onClick={() => setShowSaved(!showSaved)}><Heart size={16} /> Saved looks ({validSaved.length})</button></div>
-      {aiReady && <div className="ai-handoff-toggle"><button type="button" className="text-button" aria-expanded={showAI} onClick={() => setShowAI(!showAI)}>Try a ChatGPT look</button><span>Optional copy/paste. Your photos never leave this app.</span></div>}
+      <div className="style-source"><div><strong>{realPieces.length} photographed {realPieces.length === 1 ? 'piece' : 'pieces'}</strong><button type="button" className="text-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div><label className="demo-toggle"><input type="checkbox" checked={includeDemo} onChange={(event) => { setIncludeDemo(event.target.checked); setResult(null); setComparison(null) }} /><span>Include labeled sample pieces</span></label></div>
+      {recentWear.size > 0 && <label className="demo-toggle fresh-toggle"><input type="checkbox" checked={preferFresh} onChange={(event) => { setPreferFresh(event.target.checked); setResult(null); setComparison(null) }} /><span>Prefer outfits I haven’t worn in the last 7 days</span></label>}
+      <div className="style-submit"><button className="primary-button generate" type="submit"><Sparkles size={19} /> Build my looks</button><button type="button" className="secondary-button" aria-pressed={showSaved} onClick={() => { setShowSaved(!showSaved); setComparison(null) }}><Heart size={16} /> Saved looks ({validSaved.length})</button></div>
+      {aiReady && <div className="ai-handoff-toggle"><button type="button" className="text-button" aria-expanded={showAI} onClick={() => { setShowAI(!showAI); setComparison(null) }}>Try a ChatGPT look</button><span>Optional copy/paste. Your photos never leave this app.</span></div>}
       {storageError && <p role="alert" className="form-error">Couldn’t save that look in this browser. Try freeing some browser storage.</p>}
     </form>
-    {showAI && aiReady && <AILookPanel key={JSON.stringify([selectedOccasion, vibe, condition, anchor?.id])} pieces={realPieces} preferences={currentPreferences} anchorId={anchor?.id} close={() => setShowAI(false)} onLooks={(looks) => {
+    {showAI && aiReady && <AILookPanel key={JSON.stringify([selectedOccasion, vibe, condition, anchor?.id])} pieces={realPieces} preferences={currentPreferences} anchorId={anchor?.id} close={() => setShowAI(false)} onLooks={(looks, sharedItemIds) => {
+      setComparison(null)
       setDraftSwaps({})
-      setResult({ looks, preferences: currentPreferences, gaps: '', demo: false, ai: true })
+      setResult({ looks, preferences: currentPreferences, gaps: '', demo: false, ai: true, sharedItemIds })
       setShowAI(false)
       setShowSaved(false)
     }} />}
     <div className="outfits page-container" aria-live="polite">
       {showSaved && <><div className="section-heading"><p className="eyebrow">Only in this browser</p><h2>Saved looks</h2></div>{validSaved.length ? <div className="outfit-grid">{validSaved.map((look, i) => <OutfitCard key={look.id} index={i} look={look} items={resolve(look)} onItem={onItem} onSave={toggleSave} isSaved onWorn={() => markWorn(look)} today={today} />)}</div> : <p>Save an outfit to come back to it later.</p>}</>}
       {!showSaved && result && !visibleLooks.length && <div className="empty-state"><Shirt /><h3>Your closet needs a base outfit</h3><p>{result.gaps} Style Me won’t substitute pieces you haven’t saved. You can also turn on sample pieces to try the flow.</p><button type="button" className="secondary-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div>}
-      {!showSaved && result && !!visibleLooks.length && <>
+      {comparison && <LookComparisonPanel match={comparison} resolve={resolve} saved={saved} onSave={toggleSave} close={() => setComparison(null)} />}
+      {!showSaved && !comparison && result && !!visibleLooks.length && <>
         <div className="section-heading"><p className="eyebrow">{result.preferences.vibe} ideas for {result.preferences.occasion}{result.demo ? ' · sample pieces enabled' : ''}{result.ai ? ' · imported from ChatGPT' : ''}</p><h2>{result.ai ? 'Your imported looks are ready' : 'Your looks are ready'}</h2></div>
+        {result.ai && <button type="button" className="secondary-button compare-button" onClick={compareResults}>Compare with the built-in stylist</button>}
         <div className="outfit-grid">{visibleLooks.map((initial, i) => {
           const customized = draftSwaps[initial.id]
           const look = customized && resolve(customized).length === customized.itemIds.length ? customized : initial
@@ -113,7 +129,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
         })}</div>
         {result.preferFresh && visibleLooks.some((look) => recentWear.has(combinationKey(look.itemIds))) &&
           <p className="style-limit">Some familiar looks are included when there aren’t enough good alternatives.</p>}
-        {visibleLooks.length < 3 && <p className="style-limit">{result.gaps}</p>}
+        {visibleLooks.length < 3 && result.gaps && <p className="style-limit">{result.gaps}</p>}
       </>}
     </div>
   </section>

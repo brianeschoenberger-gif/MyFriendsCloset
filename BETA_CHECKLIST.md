@@ -104,6 +104,7 @@ Evidence: Vitest and Playwright submit dates and a note, switch identities, appr
 - [x] Saved looks survive reload; optional samples and the same-browser demo are explicit.
 - [x] Friend mode cannot see the owner's private stylist or private items.
 - [x] A saved owner-photo outfit downloads an image card without making any HTTP requests.
+- [x] The optional ChatGPT workflow can omit custom garment names and compare an imported pick with the built-in stylist before revealing sources. Verified with a synthetic reply, not a live call.
 
 Cold-start evidence: a fresh 390px Chromium session adds six synthetic garment photos with distinct editable names and user-confirmed color estimates, selects an occasion, saves an own-photo-only look and verifies the local PNG header, filename and dimensions. In a second isolated browser, the same flow imports all photos and wear history, gracefully recovers from a simulated full saved-look store without duplicating clothes, and restores the original look after retry. Human relevance and physical phone behavior still need the pilot in BETA_PILOT.md.
 

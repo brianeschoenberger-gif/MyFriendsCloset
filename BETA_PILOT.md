@@ -7,7 +7,7 @@ Use a physical phone, the public app, and a real upcoming occasion. Start with t
 1. From Home, tap **Add your first photos**. Choose the six photos together, confirm categories, and skip names and colors if you're in a hurry. Include one original iPhone camera photo from the Photo Library. Check that it appears upright and survives reopening Safari. If it fails, compare a JPEG export of the same photo to isolate the problem.
 2. Tap **Style my photos**, enter the real occasion and build looks. Start a clock at the first photo and note when the first *wearable* result appears, not just the first result.
 3. If it's close, swap one piece. Save a look you'd wear. Return on the day and mark it worn only if you actually wore it.
-4. Note the biggest snag: capture, tagging, trust, styling quality, or something else. If no look felt wearable, write down why. Try the same occasion with the separate ChatGPT handoff only if you want to compare.
+4. Note the biggest snag: capture, tagging, trust, styling quality, or something else. If no look felt wearable, write down why. If you try the optional ChatGPT handoff for the same occasion, tap **Compare with the built-in stylist**. Pick what you would actually wear before seeing the labels. A tie means both chose the same pieces, not that both are good.
 
 A promising result is one usable look in under five minutes without coaching. For a small opt-in pilot (4–6 people), look for at least half saving or wearing a look, and at least two returning within a week without being prompted. These are product signals, not statistical claims. Do not solicit testers on someone's behalf, require screenshots of private wardrobes, or collect photos in analytics.
 
