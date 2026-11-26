@@ -74,3 +74,5 @@ Because the current beta uses browser-local storage, each browser/device has its
 - Vitest and Testing Library for the owner/friend beta journeys
 
 **Fast wardrobe setup:** Open **My closet → Add multiple photos**. Select up to 12 garment photos; choose a category for each. Names and colors are optional and editable after import. Photos are prepared on this device and saved privately to this browser; demo links do not carry your wardrobe to another device.
+
+**Keep a wardrobe backup:** **My closet → Backup** downloads a JSON file containing your supported clothing photos and their details. Keep the file somewhere you trust. To move to a new browser or recover the wardrobe, choose the file, review the number of new items, and restore. The restore never replaces your existing wardrobe and resets new items to Private. The file does not include saved looks, demo pieces, or borrowing history.

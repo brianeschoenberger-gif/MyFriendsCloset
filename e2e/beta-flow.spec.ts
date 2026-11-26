@@ -159,3 +159,45 @@ test('batch adds mobile photos, keeps them private, and feeds the outfit builder
   await expect(page.getByText('Batch tee')).toHaveCount(0)
   await expect(page.getByText('Batch jeans')).toHaveCount(0)
 })
+
+test('downloads a private wardrobe and restores it to a fresh browser without sharing it', async ({ page, browser }, testInfo) => {
+  await page.goto('/')
+  const nav = page.getByRole('navigation', { name: 'Mobile navigation' })
+  await nav.getByRole('button', { name: 'Closet' }).click()
+  await page.getByRole('button', { name: 'Add from camera' }).click()
+  const photo = await page.evaluate(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 80; canvas.height = 60
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = '#8b5c67'; ctx.fillRect(0, 0, 80, 60)
+    return canvas.toDataURL('image/png').split(',')[1]
+  })
+  await page.getByLabel('Choose from photo library').setInputFiles({ name: 'test.png', mimeType: 'image/png', buffer: Buffer.from(photo, 'base64') })
+  await expect(page.getByAltText('New item preview')).toBeVisible()
+  await page.getByLabel('Item name').fill('Backup test jacket')
+  await page.getByLabel('Category').selectOption('Jackets')
+  await page.getByRole('button', { name: 'Borrowable' }).click()
+  await page.getByRole('button', { name: 'Save to my closet' }).click()
+  await page.getByRole('button', { name: 'Backup', exact: true }).click()
+  const pendingDownload = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download wardrobe' }).click()
+  const downloaded = await pendingDownload
+  const file = testInfo.outputPath('wardrobe.json')
+  await downloaded.saveAs(file)
+
+  const fresh = await browser.newPage({ viewport: { width: 390, height: 844 }, baseURL: testInfo.project.use.baseURL })
+  try {
+    await fresh.goto('/')
+    await fresh.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
+    await fresh.getByRole('button', { name: 'Backup', exact: true }).click()
+    await fresh.getByLabel('Choose wardrobe backup file').setInputFiles(file)
+    await fresh.getByRole('button', { name: 'Restore 1 private piece' }).click()
+    await expect(fresh.getByRole('heading', { name: 'Backup test jacket' })).toBeVisible()
+    await fresh.getByRole('button', { name: 'Backup', exact: true }).click()
+    await fresh.getByLabel('Choose wardrobe backup file').setInputFiles(file)
+    await expect(fresh.getByText(/already in your closet/)).toBeVisible()
+    await fresh.getByRole('button', { name: 'Close wardrobe backup' }).click()
+    await fresh.getByRole('button', { name: 'Alex', exact: true }).click()
+    await expect(fresh.getByText('Backup test jacket')).toHaveCount(0)
+  } finally { await fresh.close() }
+})

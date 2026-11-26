@@ -15,6 +15,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [ ] Try on a physical iPhone with six real garments. Track time to first useful look, save/wear, and return within one week.
 - [x] Add private-by-default multi-photo import with category review.
 - [ ] Add optional assisted tagging with editable confirmation.
+- [x] Export a local wardrobe archive; preview and restore into an existing closet safely.
 - [ ] Add private sync and real invite permissions before testing cross-device lending.
 
 ## Quality harness tasks

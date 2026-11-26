@@ -125,4 +125,4 @@ Current score: 18/18
 Critical blockers: None for the single-device playable beta. Cross-device sharing remains local-only until a hosted backend is added.
 Next highest-impact task: Try a six-piece capsule and a real styling occasion on a physical iPhone. Test capture permissions, time to a useful look, and iOS storage behavior.
 
-Nov 26 verification: lint, 14 Vitest tests, and production build passed. The new 390px batch test is present, but browser verification for this run was blocked by the unavailable local Chromium binary. Earlier Playwright coverage applies to the previous build.
+Nov 26 verification: lint, 18 Vitest tests, the production Pages build, and four real Chromium Playwright browser tests passed. At 390×844 the tests verified upload/compression, local lending and approval, multiple photos → outfit, and wardrobe download → restore in a fresh browser context → private visibility; the desktop styling flow was also checked. These are simulated devices, not a physical iPhone.

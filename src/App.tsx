@@ -1,11 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { Check, CircleUserRound, Copy, Home, Images, Plus, Search, Shirt, Share2, Sparkles, Users, X } from 'lucide-react'
+import { Check, CircleUserRound, Copy, Download, Home, Images, Plus, Search, Shirt, Share2, Sparkles, Users, X } from 'lucide-react'
 import { AddItemModal, BorrowRequestModal, ItemCard, ItemModal, PageHeading } from './components/ClosetUI'
 import { Dashboard, EventPage, RequestsPage } from './components/Pages'
 import { BulkAddModal } from './components/BulkAddModal'
+import { WardrobeBackupModal } from './components/WardrobeBackupModal'
 import { StylePage } from './components/StylePage'
 import { friendItems, friends, initialItems, initialRequests, profiles } from './data/mockData'
 import { storageKeys, usePersistentState } from './lib/storage'
+import { mergeWardrobeBackup } from './lib/wardrobeBackup'
 import type { BorrowRequest, ClosetItem, Identity, Page, Visibility } from './types'
 import './App.css'
 
@@ -21,6 +23,7 @@ function App() {
   const [requestingItem, setRequestingItem] = useState<ClosetItem | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showBulkAdd, setShowBulkAdd] = useState(false)
+  const [showBackup, setShowBackup] = useState(false)
   const [editingItem, setEditingItem] = useState<ClosetItem | null>(null)
   const [photoOnly, setPhotoOnly] = useState(false)
   const [borrowableOnly, setBorrowableOnly] = useState(false)
@@ -36,9 +39,9 @@ function App() {
     ? 'https://example.com/?invite=MFC-BRIAN&mode=friend'
     : `${window.location.origin}${window.location.pathname}?invite=MFC-BRIAN&mode=friend`
 
-  function navigate(next: Page) { setPage(next); setSelectedItem(null); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  function navigate(next: Page) { setPage(next); setSelectedItem(null); window.scrollTo({ top: 0, behavior: 'instant' }) }
   function notify(message: string) { setToast(message); window.setTimeout(() => setToast(''), 2600) }
-  function switchIdentity(next: Identity) { setIdentity(next); setPage(next === 'friend' ? 'friends' : 'home'); setSelectedItem(null); setEditingItem(null); setShowAdd(false); setShowBulkAdd(false); setRequestingItem(null); notify(`Continuing as ${profiles[next].name}`) }
+  function switchIdentity(next: Identity) { setIdentity(next); setPage(next === 'friend' ? 'friends' : 'home'); setSelectedItem(null); setEditingItem(null); setShowAdd(false); setShowBulkAdd(false); setShowBackup(false); setRequestingItem(null); notify(`Continuing as ${profiles[next].name}`) }
   function dismissOnboarding() { setOnboardingDismissed(true) }
 
   const inviteShareData = {
@@ -116,14 +119,14 @@ function App() {
     {(itemStorageFailure || requestStorageFailure) && <div className="storage-alert" role="alert"><div><strong>Not saved</strong><span>{itemStorageFailure?.message ?? requestStorageFailure?.message}</span></div><div><button onClick={() => { setIdentity('owner'); setPage('closet'); setSelectedItem(null) }}>Manage closet</button><button aria-label="Dismiss storage warning" onClick={() => { clearItemStorageFailure(); clearRequestStorageFailure() }}>Dismiss</button></div></div>}
     <main>
       {page === 'home' && (identity === 'owner' ? <Dashboard navigate={navigate} items={ownerItems} requests={requests.filter((request) => request.ownerId === 'owner')} onItem={setSelectedItem} /> : <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} />)}
-      {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${ownerItems.length} saved pieces, ${ownerItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><div className="closet-add-actions"><button className="secondary-button" onClick={() => setShowBulkAdd(true)}><Images size={18} /> Add multiple photos</button><button className="primary-button" onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></div></PageHeading><div className="filter-row">{['All', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}<button className={photoOnly ? 'filter active' : 'filter'} aria-pressed={photoOnly} onClick={() => setPhotoOnly(!photoOnly)}>My photos only</button></div>{visibleOwnItems.length ? <div className="item-grid">{visibleOwnItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div> : <div className="empty-state"><Shirt /><h3>No matching pieces</h3><p>Change the filters, or photograph a piece to add it here.</p></div>}</section>}
+      {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${ownerItems.length} saved pieces, ${ownerItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><div className="closet-add-actions"><button className="secondary-button" onClick={() => setShowBackup(true)}><Download size={17} /> Backup</button><button className="secondary-button" onClick={() => setShowBulkAdd(true)}><Images size={18} /> Add multiple photos</button><button className="primary-button" onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></div></PageHeading><div className="filter-row">{['All', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}<button className={photoOnly ? 'filter active' : 'filter'} aria-pressed={photoOnly} onClick={() => setPhotoOnly(!photoOnly)}>My photos only</button></div>{visibleOwnItems.length ? <div className="item-grid">{visibleOwnItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div> : <div className="empty-state"><Shirt /><h3>No matching pieces</h3><p>Change the filters, or photograph a piece to add it here.</p></div>}</section>}
       {page === 'friends' && (identity === 'friend' ? <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} /> : <section className="page-container"><PageHeading eyebrow="The good stuff" title="Friends' closets" subtitle="Borrow something with a story, not another shopping bag." /><div className="friend-strip">{friends.map((friend) => <button className="friend-pill" key={friend.name}><span className="avatar" style={{ background: friend.color }}>{friend.initials}</span><span><b>{friend.name}</b><small>{friend.count} pieces</small></span></button>)}</div><div className="section-heading inline"><div><p className="eyebrow">Palm Springs picks</p><h2>Shared with you</h2></div><BorrowableToggle value={borrowableOnly} setValue={setBorrowableOnly} /></div><div className="item-grid">{ownerFriendItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div></section>)}
       {page === 'requests' && <RequestsPage requests={requests} identity={identity} resolveRequest={resolveRequest} />}
       {identity === 'owner' && page === 'style' && <StylePage onItem={setSelectedItem} onAdd={() => setShowAdd(true)} items={ownerItems} />}
       {page === 'event' && <EventPage onItem={setSelectedItem} />}
     </main>
     <nav className="mobile-nav" aria-label="Mobile navigation"><MobileNav icon={<Home />} label="Home" active={page === 'home'} onClick={() => navigate('home')} />{identity === 'owner' && <MobileNav icon={<Shirt />} label="Closet" active={page === 'closet'} onClick={() => navigate('closet')} />}<MobileNav icon={<Users />} label="Share" active={page === 'friends'} onClick={() => navigate('friends')} />{identity === 'owner' && <MobileNav icon={<Sparkles />} label="Style" active={page === 'style'} onClick={() => navigate('style')} />}<MobileNav icon={<CircleUserRound />} label="Requests" active={page === 'requests'} onClick={() => navigate('requests')} /></nav>
-    {selectedItem && <ItemModal item={selectedItem} own={identity === 'owner' && selectedItem.ownerId === 'owner'} canRequest={identity === 'friend' && selectedItem.ownerId === 'owner'} editItem={(item) => { setSelectedItem(null); setEditingItem(item) }} close={() => setSelectedItem(null)} updateVisibility={updateVisibility} requestItem={(item) => setRequestingItem(item)} deleteItem={deleteItem} />}
+    {selectedItem && <ItemModal item={selectedItem} own={identity === 'owner' && selectedItem.ownerId === 'owner'} canRequest={identity === 'friend' && selectedItem.ownerId === 'owner'} editItem={(item) => { setSelectedItem(null); setEditingItem(item) }} close={() => setSelectedItem(null)} updateVisibility={updateVisibility} requestItem={(item) => { setSelectedItem(null); setRequestingItem(item) }} deleteItem={deleteItem} />}
     {showAdd && <AddItemModal close={() => setShowAdd(false)} save={(item) => { const saved = setItems((current) => [...current, { ...item, id: current.reduce((max, entry) => Math.max(max, entry.id + 1), item.id) }]); if (saved) { setShowAdd(false); notify('Saved to your closet') } return saved }} />}
     {showBulkAdd && identity === 'owner' && <BulkAddModal close={() => setShowBulkAdd(false)} save={(drafts) => {
       const saved = setItems((current) => {
@@ -133,13 +136,18 @@ function App() {
       if (saved) { setShowBulkAdd(false); setCategory('All'); setPhotoOnly(true); notify(`Saved ${drafts.length} private ${drafts.length === 1 ? 'piece' : 'pieces'}`) }
       return saved
     }} />}
+    {showBackup && identity === 'owner' && <WardrobeBackupModal items={items} close={() => setShowBackup(false)} restore={(imported) => {
+      const saved = setItems((current) => mergeWardrobeBackup(current, imported))
+      if (saved) { setShowBackup(false); setCategory('All'); setPhotoOnly(true); notify('Wardrobe restored') }
+      return saved
+    }} />}
     {editingItem && identity === 'owner' && <AddItemModal item={editingItem} close={() => setEditingItem(null)} save={(updated) => {
       const saved = setItems((current) => current.map((item) => item.id === updated.id ? updated : item))
       if (saved) { setEditingItem(null); notify('Closet item updated') }
       return saved
     }} />}
     {requestingItem && <BorrowRequestModal item={requestingItem} requester={identity} close={() => setRequestingItem(null)} save={saveRequest} />}
-    {toast && <div className="toast"><Check size={17} /> {toast}</div>}
+    {toast && <div className="toast" role="status"><Check size={17} /> {toast}</div>}
   </div>
 }
 

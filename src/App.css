@@ -60,3 +60,16 @@ h1,h2,h3,p { margin-top:0; } h1,h2 { font-family:'Gloock',serif; font-weight:400
   .bulk-draft > img { width: 52px; height: 74px; }
   .bulk-fields { grid-template-columns: minmax(0, 1fr); }
 }
+
+.backup-modal { width: min(100%, 590px); }
+.backup-modal > p { margin: .65rem 0; }
+.backup-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: 1rem 0; }
+.backup-summary { background: #f6f2ec; border-radius: 12px; padding: .85rem; }
+.backup-summary p { margin: 0 0 .75rem; }
+
+.toast { pointer-events: none; }
+.request-actions button { min-height: 44px; }
+body:has(.modal-backdrop) { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

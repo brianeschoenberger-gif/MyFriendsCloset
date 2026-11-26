@@ -212,6 +212,33 @@ describe('My Friends Closet playable beta', () => {
     expect(screen.getByRole('heading', { name: 'Indigo Bottoms' })).toBeInTheDocument()
   })
 
+  it('previews a backup and adds the imported garment privately without replacing the existing closet', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(primaryNav().getByRole('button', { name: 'My closet' }))
+    await user.click(screen.getByRole('button', { name: /^Backup$/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Wardrobe backup' })
+    const text = JSON.stringify({ format: 'my-friends-closet/wardrobe-v1', items: [{
+      id: 1, name: 'Weekend backup jacket', category: 'Jackets', size: '', color: 'Navy', brand: '', notes: '',
+      visibility: 'Borrowable', occasionTags: ['Weekend'], imageData: 'data:image/png;base64,QUJD',
+      createdAt: '2026-11-26T00:00:00.000Z', updatedAt: '2026-11-26T00:00:00.000Z',
+    }] })
+    const backup = new File([text], 'wardrobe.json', { type: 'application/json' })
+    await user.upload(within(dialog).getByLabelText('Choose wardrobe backup file'), backup)
+    const restore = await within(dialog).findByRole('button', { name: 'Restore 1 private piece' })
+    expect(screen.queryByRole('heading', { name: 'Weekend backup jacket' })).not.toBeInTheDocument()
+    await user.click(restore)
+    expect(screen.getByRole('heading', { name: 'Weekend backup jacket' })).toBeInTheDocument()
+    const items = JSON.parse(window.localStorage.getItem('mfc-beta-items-v1') ?? '[]')
+    const imported = items.find((item: { name: string }) => item.name === 'Weekend backup jacket')
+    expect(imported.visibility).toBe('Private')
+    expect(items.length).toBeGreaterThan(1)
+
+    await user.click(screen.getByRole('button', { name: /^Backup$/ }))
+    await user.upload(screen.getByLabelText('Choose wardrobe backup file'), backup)
+    expect(await screen.findByText(/already in your closet/)).toBeInTheDocument()
+  })
+
   it('keeps the add form open and explains how to recover from storage quota failure', async () => {
     const user = userEvent.setup()
     render(<App />)
