@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "vitest run",
+    "check:server": "tsc -p tsconfig.server.json",
+    "test": "vitest run && npm run test:server",
+    "test:server": "vitest run --config vitest.server.config.ts",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
     "preview": "vite preview"

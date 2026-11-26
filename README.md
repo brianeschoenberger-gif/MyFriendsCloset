@@ -40,6 +40,7 @@ The built-in stylist uses matching rules. The optional ChatGPT handoff below use
 
 ```bash
 npm run lint
+npm run check:server
 npm run test
 npm run test:e2e
 npm run build
@@ -90,3 +91,5 @@ To wear something specific, open its photo in **My closet** and tap **Style this
 In **Style → Saved looks**, tap **Mark worn today** to record a day you actually wore the outfit. Tap again to undo. The date and count stay in this browser. After logging wear, you can tell the built-in stylist to prefer other combinations from the last seven days. It may repeat a strong fit if good alternatives are limited.
 
 A saved outfit made entirely from your photos has **Ask a friend → Download outfit card**. The PNG contains garment photos and names, not notes, dates, or contact details. Nothing is shared or uploaded by the app.
+
+A separate [hosted styling proof of concept](server/README.md) is tested with fake accounts and fake model transport. It is not deployed or bundled into GitHub Pages.

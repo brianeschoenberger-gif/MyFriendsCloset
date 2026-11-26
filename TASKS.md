@@ -18,6 +18,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Add private, editable color-tag hints on single and batch photos; accept a batch of hints without touching a manual tag.
 - [ ] Evaluate whether automatic category hints are necessary after real photo trials.
 - [x] Export a local wardrobe archive; preview and restore into an existing closet safely, including personal-photo saved looks and wear history.
+- [x] Prepare and test an opt-in server-side styling contract; do not deploy or connect an API key.
 - [ ] Add private sync and real invite permissions before testing cross-device lending.
 
 ## Quality harness tasks

@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Added a non-deployed server-side AI styling proof of concept. It requires verified account consent, scopes input to owner garment metadata, enforces an injected request budget, and validates suggested garment codes. Tests use fake model transport, not live inference.
+
 - Camera and bulk intake now handle compatible photos without MIME metadata, give a useful HEIC/HEIF fallback if decode fails, and honor photo orientation in Chromium.
 
 - Added a styling option to prefer combinations not worn in the last seven local days, without discarding a useful repeated outfit when alternatives are limited.
