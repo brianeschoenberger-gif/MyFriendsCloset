@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Added closet search across garment details, visibility filters, and photo-first ordering. Added optional color hints computed from a photo on-device; the hint is never set without user input.
+
 - Added an optional ChatGPT copy/paste outfit handoff, with explicit metadata review and strict validation of returned wardrobe IDs. No automatic network transfer.
 
 - Added a “Style this piece” shortcut and garment picker; every generated look includes the selected garment and offers targeted missing-piece guidance.

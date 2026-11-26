@@ -54,7 +54,8 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
       if (!drafts.length || processing || saving || drafts.some((draft) => !draft.category)) return
       const now = new Date().toISOString()
       const pieces = drafts.map(({ name, category, color, photo }): Omit<ClosetItem, 'id'> => {
-        const { dataUrl, ...imageMeta } = photo
+        const { dataUrl, originalBytes, storedBytes, width, height, compressed } = photo
+        const imageMeta = { originalBytes, storedBytes, width, height, compressed }
         const singular = category === 'Accessories' ? 'Accessory' : ['Bottoms', 'Shoes'].includes(category) ? category : category.slice(0, -1)
         return {
           ownerId: 'owner', owner: 'Brian', imageData: dataUrl, imageMeta,
@@ -90,6 +91,7 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
           </select></label>
           <label>Name<input maxLength={80} value={draft.name} aria-label={`Name for photo ${index + 1}`} placeholder="Optional" onChange={(event) => update(draft.id, { name: event.target.value })} /></label>
           <label>Color<input maxLength={35} value={draft.color} aria-label={`Color for photo ${index + 1}`} placeholder="Optional" onChange={(event) => update(draft.id, { color: event.target.value })} /></label>
+          {draft.photo.colorHint && !draft.color.trim() && <button type="button" className="color-hint" onClick={() => update(draft.id, { color: draft.photo.colorHint! })}>Use {draft.photo.colorHint} for photo {index + 1}</button>}
         </div>
         <button type="button" className="icon-button bulk-remove" aria-label={`Remove photo ${index + 1}`} onClick={() => setDrafts((current) => current.filter(({ id }) => id !== draft.id))}><Trash2 size={19} /></button>
       </fieldset>)}</div>

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { Check, CircleUserRound, Copy, Download, Home, Images, Plus, Search, Shirt, Share2, Sparkles, Users, X } from 'lucide-react'
 import { AddItemModal, BorrowRequestModal, ItemCard, ItemModal, PageHeading } from './components/ClosetUI'
 import { Dashboard, EventPage, RequestsPage } from './components/Pages'
@@ -8,6 +8,7 @@ import { StylePage } from './components/StylePage'
 import { friendItems, friends, initialItems, initialRequests, profiles } from './data/mockData'
 import { storageKeys, usePersistentState } from './lib/storage'
 import { useWardrobe } from './lib/useWardrobe'
+import { filterCloset, type ClosetFilters } from './lib/closetSearch'
 import { mergeWardrobeBackup } from './lib/wardrobeBackup'
 import type { BorrowRequest, ClosetItem, Identity, Page, Visibility } from './types'
 import './App.css'
@@ -30,11 +31,20 @@ function App() {
   const [photoOnly, setPhotoOnly] = useState(false)
   const [borrowableOnly, setBorrowableOnly] = useState(false)
   const [category, setCategory] = useState('All')
+  const [closetQuery, setClosetQuery] = useState('')
+  const [closetVisibility, setClosetVisibility] = useState<ClosetFilters['visibility']>('Any')
+  const [closetOrder, setClosetOrder] = useState<ClosetFilters['order']>('Recent')
+  const closetSearchRef = useRef<HTMLInputElement>(null)
   const [toast, setToast] = useState('')
   const profile = profiles[identity]
 
   const ownerItems = useMemo(() => items.filter((item) => item.ownerId === 'owner'), [items])
-  const visibleOwnItems = useMemo(() => ownerItems.filter((item) => (category === 'All' || item.category === category) && (!photoOnly || Boolean(item.imageData))), [ownerItems, category, photoOnly])
+  const visibleOwnItems = useMemo(() => filterCloset(ownerItems, {
+    category, photoOnly, query: closetQuery, visibility: closetVisibility, order: closetOrder,
+  }), [ownerItems, category, photoOnly, closetQuery, closetVisibility, closetOrder])
+  const activeFilters = category !== 'All' || photoOnly || Boolean(closetQuery.trim()) || closetVisibility !== 'Any'
+  function resetClosetFilters() { setCategory('All'); setPhotoOnly(false); setClosetQuery(''); setClosetVisibility('Any') }
+  function showPersonalPhotos() { resetClosetFilters(); setPhotoOnly(true) }
   const friendViewItems = ownerItems.filter((item) => item.visibility !== 'Private' && (!borrowableOnly || item.visibility === 'Borrowable'))
   const ownerFriendItems = borrowableOnly ? friendItems.filter((item) => item.visibility === 'Borrowable') : friendItems
   const inviteLink = typeof window === 'undefined'
@@ -111,7 +121,10 @@ function App() {
   const pendingCount = requests.filter((request) => identity === 'owner' ? request.ownerId === 'owner' && request.status === 'Pending' : request.requesterId === identity && request.status === 'Pending').length
 
   return <div className="app-shell" data-identity={identity}>
-    <header className="topbar"><button className="brand" onClick={() => navigate('home')} aria-label="Go home"><span className="brand-mark">M</span><span>my friends closet</span></button><nav className="desktop-nav" aria-label="Primary navigation"><NavButton active={page === 'home'} onClick={() => navigate('home')} label="Home" />{identity === 'owner' && <NavButton active={page === 'closet'} onClick={() => navigate('closet')} label="My closet" />}<NavButton active={page === 'friends'} onClick={() => navigate('friends')} label={identity === 'friend' ? "Brian's closet" : 'Friends'} />{identity === 'owner' && <NavButton active={page === 'style'} onClick={() => navigate('style')} label="Style" />}<NavButton active={page === 'requests'} onClick={() => navigate('requests')} label="Requests" count={pendingCount} /></nav><div className="header-actions"><button className="icon-button" aria-label="Search"><Search size={19} /></button><div className="identity-switcher" aria-label="Demo identity"><button className={identity === 'owner' ? 'active' : ''} onClick={() => switchIdentity('owner')}>Brian</button><button className={identity === 'friend' ? 'active' : ''} onClick={() => switchIdentity('friend')}>Alex</button></div><span className="avatar self" aria-label={`Current identity: ${profile.name}`}>{profile.initials}</span></div></header>
+    <header className="topbar"><button className="brand" onClick={() => navigate('home')} aria-label="Go home"><span className="brand-mark">M</span><span>my friends closet</span></button><nav className="desktop-nav" aria-label="Primary navigation"><NavButton active={page === 'home'} onClick={() => navigate('home')} label="Home" />{identity === 'owner' && <NavButton active={page === 'closet'} onClick={() => navigate('closet')} label="My closet" />}<NavButton active={page === 'friends'} onClick={() => navigate('friends')} label={identity === 'friend' ? "Brian's closet" : 'Friends'} />{identity === 'owner' && <NavButton active={page === 'style'} onClick={() => navigate('style')} label="Style" />}<NavButton active={page === 'requests'} onClick={() => navigate('requests')} label="Requests" count={pendingCount} /></nav><div className="header-actions">{identity === 'owner' && <button className="icon-button" aria-label="Search my closet" onClick={() => {
+      navigate('closet')
+      window.requestAnimationFrame(() => closetSearchRef.current?.focus())
+    }}><Search size={19} /></button>}<div className="identity-switcher" aria-label="Demo identity"><button className={identity === 'owner' ? 'active' : ''} onClick={() => switchIdentity('owner')}>Brian</button><button className={identity === 'friend' ? 'active' : ''} onClick={() => switchIdentity('friend')}>Alex</button></div><span className="avatar self" aria-label={`Current identity: ${profile.name}`}>{profile.initials}</span></div></header>
     <div className={`identity-banner ${identity}`}><strong>{identity === 'owner' ? 'Owner mode' : 'Friend mode'}</strong><span>{identity === 'owner' ? 'Your photos stay in this browser. Sharing and requests are simulated.' : 'Demo friend view. No photos are shared to another device.'}</span></div>
     {!onboardingDismissed && <OnboardingCard
       identity={identity}
@@ -122,7 +135,11 @@ function App() {
     <main aria-busy={wardrobeLoading}>
       {wardrobeLoading && <p className="photo-local-note wardrobe-loading" role="status">Opening your wardrobe…</p>}
       {page === 'home' && (identity === 'owner' ? <Dashboard navigate={navigate} items={ownerItems} requests={requests.filter((request) => request.ownerId === 'owner')} onItem={setSelectedItem} /> : <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} />)}
-      {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${ownerItems.length} saved pieces, ${ownerItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><div className="closet-add-actions"><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBackup(true)}><Download size={17} /> Backup</button><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBulkAdd(true)}><Images size={18} /> Add multiple photos</button><button className="primary-button" disabled={wardrobeLoading} onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></div></PageHeading><div className="filter-row">{['All', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}<button className={photoOnly ? 'filter active' : 'filter'} aria-pressed={photoOnly} onClick={() => setPhotoOnly(!photoOnly)}>My photos only</button></div>{visibleOwnItems.length ? <div className="item-grid">{visibleOwnItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div> : <div className="empty-state"><Shirt /><h3>No matching pieces</h3><p>Change the filters, or photograph a piece to add it here.</p></div>}</section>}
+      {page === 'closet' && identity === 'owner' && <section className="page-container"><PageHeading eyebrow="Your real wardrobe" title="My closet" subtitle={`${ownerItems.length} saved pieces, ${ownerItems.filter((item) => item.visibility === 'Borrowable').length} ready to borrow.`}><div className="closet-add-actions"><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBackup(true)}><Download size={17} /> Backup</button><button className="secondary-button" disabled={wardrobeLoading} onClick={() => setShowBulkAdd(true)}><Images size={18} /> Add multiple photos</button><button className="primary-button" disabled={wardrobeLoading} onClick={() => setShowAdd(true)}><Plus size={18} /> Add from camera</button></div></PageHeading><div className="closet-search-controls">
+        <label className="closet-search-field"><span>Search clothes</span><div><Search size={18} /><input type="search" ref={closetSearchRef} value={closetQuery} maxLength={100} placeholder="Try navy, linen, or dinner" onChange={(event) => setClosetQuery(event.target.value)} /></div></label>
+        <label>Visibility<select value={closetVisibility} onChange={(event) => setClosetVisibility(event.target.value as ClosetFilters['visibility'])}><option value="Any">All visibility</option><option>Private</option><option>Friends</option><option>Borrowable</option></select></label>
+        <label>Sort by<select value={closetOrder} onChange={(event) => setClosetOrder(event.target.value as ClosetFilters['order'])}><option>Recent</option><option>A–Z</option></select></label>
+      </div><div className="filter-row">{['All', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}<button className={photoOnly ? 'filter active' : 'filter'} aria-pressed={photoOnly} onClick={() => setPhotoOnly(!photoOnly)}>My photos only</button></div><div className="closet-results-line"><span role="status">{visibleOwnItems.length} {visibleOwnItems.length === 1 ? 'piece' : 'pieces'} shown</span>{activeFilters && <button className="text-button" onClick={resetClosetFilters}>Clear filters</button>}</div>{visibleOwnItems.length ? <div className="item-grid">{visibleOwnItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div> : <div className="empty-state"><Shirt /><h3>No matching pieces</h3><p>Change the filters, or photograph a piece to add it here.</p></div>}</section>}
       {page === 'friends' && (identity === 'friend' ? <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} /> : <section className="page-container"><PageHeading eyebrow="The good stuff" title="Friends' closets" subtitle="Borrow something with a story, not another shopping bag." /><div className="friend-strip">{friends.map((friend) => <button className="friend-pill" key={friend.name}><span className="avatar" style={{ background: friend.color }}>{friend.initials}</span><span><b>{friend.name}</b><small>{friend.count} pieces</small></span></button>)}</div><div className="section-heading inline"><div><p className="eyebrow">Palm Springs picks</p><h2>Shared with you</h2></div><BorrowableToggle value={borrowableOnly} setValue={setBorrowableOnly} /></div><div className="item-grid">{ownerFriendItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div></section>)}
       {page === 'requests' && <RequestsPage requests={requests} identity={identity} resolveRequest={resolveRequest} />}
       {identity === 'owner' && page === 'style' && <StylePage key={stylingAnchorId ?? "any"} initialAnchorId={stylingAnchorId} onItem={setSelectedItem} onAdd={() => setShowAdd(true)} items={ownerItems} />}
@@ -130,18 +147,18 @@ function App() {
     </main>
     <nav className="mobile-nav" aria-label="Mobile navigation"><MobileNav icon={<Home />} label="Home" active={page === 'home'} onClick={() => navigate('home')} />{identity === 'owner' && <MobileNav icon={<Shirt />} label="Closet" active={page === 'closet'} onClick={() => navigate('closet')} />}<MobileNav icon={<Users />} label="Share" active={page === 'friends'} onClick={() => navigate('friends')} />{identity === 'owner' && <MobileNav icon={<Sparkles />} label="Style" active={page === 'style'} onClick={() => navigate('style')} />}<MobileNav icon={<CircleUserRound />} label="Requests" active={page === 'requests'} onClick={() => navigate('requests')} /></nav>
     {selectedItem && <ItemModal item={selectedItem} own={identity === 'owner' && selectedItem.ownerId === 'owner'} canRequest={identity === 'friend' && selectedItem.ownerId === 'owner'} styleItem={identity === 'owner' ? (item) => { navigate('style'); setStylingAnchorId(item.id) } : undefined} editItem={(item) => { setSelectedItem(null); setEditingItem(item) }} close={() => setSelectedItem(null)} updateVisibility={updateVisibility} requestItem={(item) => { setSelectedItem(null); setRequestingItem(item) }} deleteItem={deleteItem} />}
-    {showAdd && <AddItemModal close={() => setShowAdd(false)} save={async (item) => { const saved = await setItems((current) => [...current, { ...item, id: current.reduce((max, entry) => Math.max(max, entry.id + 1), item.id) }]); if (saved) { setShowAdd(false); notify('Saved to your closet') } return saved }} />}
+    {showAdd && <AddItemModal close={() => setShowAdd(false)} save={async (item) => { const saved = await setItems((current) => [...current, { ...item, id: current.reduce((max, entry) => Math.max(max, entry.id + 1), item.id) }]); if (saved) { setShowAdd(false); if (page === 'closet') showPersonalPhotos(); notify('Saved to your closet') } return saved }} />}
     {showBulkAdd && identity === 'owner' && <BulkAddModal close={() => setShowBulkAdd(false)} save={async (drafts) => {
       const saved = await setItems((current) => {
         const next = current.reduce((max, item) => Math.max(max, item.id + 1), Date.now())
         return [...current, ...drafts.map((draft, index) => ({ ...draft, id: next + index }))]
       })
-      if (saved) { setShowBulkAdd(false); setCategory('All'); setPhotoOnly(true); notify(`Saved ${drafts.length} private ${drafts.length === 1 ? 'piece' : 'pieces'}`) }
+      if (saved) { setShowBulkAdd(false); showPersonalPhotos(); notify(`Saved ${drafts.length} private ${drafts.length === 1 ? 'piece' : 'pieces'}`) }
       return saved
     }} />}
     {showBackup && identity === 'owner' && <WardrobeBackupModal items={items} close={() => setShowBackup(false)} restore={async (imported) => {
       const saved = await setItems((current) => mergeWardrobeBackup(current, imported))
-      if (saved) { setShowBackup(false); setCategory('All'); setPhotoOnly(true); notify('Wardrobe restored') }
+      if (saved) { setShowBackup(false); showPersonalPhotos(); notify('Wardrobe restored') }
       return saved
     }} />}
     {editingItem && identity === 'owner' && <AddItemModal item={editingItem} close={() => setEditingItem(null)} save={async (updated) => {

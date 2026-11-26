@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { hintColorFromImage } from './colorHint'
 
 export const storageKeys = {
   items: 'mfc-beta-items-v1',
@@ -21,6 +22,7 @@ export type ImageProcessingResult = {
   width?: number
   height?: number
   compressed: boolean
+  colorHint?: string
 }
 
 export function readStorage<T>(key: string, fallback: T): T {
@@ -94,38 +96,51 @@ function canvasToDataUrl(canvas: HTMLCanvasElement, type: string, quality: numbe
   })
 }
 
+function decodeBrowserImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const image = new Image()
+    image.onload = () => { URL.revokeObjectURL(url); resolve(image) }
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Unsupported photo format')) }
+    image.src = url
+  })
+}
+
 export async function prepareImageForStorage(file: File, maxDimension = 1600): Promise<ImageProcessingResult> {
-  const originalDataUrl = await fileToDataUrl(file)
-  const canResize = file.type !== 'image/svg+xml' && file.type !== 'image/gif' && 'createImageBitmap' in window
-
-  if (!canResize) {
-    return { dataUrl: originalDataUrl, originalBytes: file.size, storedBytes: originalDataUrl.length, compressed: false }
+  const canBitmapDecode = typeof window.createImageBitmap === 'function'
+  const canNativeDecode = typeof URL.createObjectURL === 'function' && typeof window.HTMLImageElement.prototype.decode === 'function'
+  const original = async (): Promise<ImageProcessingResult> => {
+    const dataUrl = await fileToDataUrl(file)
+    return { dataUrl, originalBytes: file.size, storedBytes: dataUrl.length, compressed: false }
   }
+  if (file.type === 'image/svg+xml' || file.type === 'image/gif' || (!canBitmapDecode && !canNativeDecode)) return original()
 
-  const bitmap = await createImageBitmap(file)
-  const sourceWidth = bitmap.width
-  const sourceHeight = bitmap.height
-  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height))
-  const width = Math.max(1, Math.round(bitmap.width * scale))
-  const height = Math.max(1, Math.round(bitmap.height * scale))
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const context = canvas.getContext('2d')
-  if (!context) {
-    bitmap.close()
-    return { dataUrl: originalDataUrl, originalBytes: file.size, storedBytes: originalDataUrl.length, width: sourceWidth, height: sourceHeight, compressed: false }
-  }
-
-  context.drawImage(bitmap, 0, 0, width, height)
-  bitmap.close()
-  const dataUrl = await canvasToDataUrl(canvas, 'image/jpeg', 0.82)
-  return {
-    dataUrl,
-    originalBytes: file.size,
-    storedBytes: dataUrl.length,
-    width,
-    height,
-    compressed: dataUrl.length < originalDataUrl.length,
-  }
+  const bitmap = canBitmapDecode ? await window.createImageBitmap(file).catch(() => undefined) : undefined
+  const source = bitmap ?? (canNativeDecode ? await decodeBrowserImage(file) : undefined)
+  if (!source) throw new Error('Unsupported photo format')
+  try {
+    const sourceWidth = bitmap?.width ?? (source as HTMLImageElement).naturalWidth
+    const sourceHeight = bitmap?.height ?? (source as HTMLImageElement).naturalHeight
+    if (!sourceWidth || !sourceHeight) throw new Error('Could not decode image')
+    const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight))
+    const width = Math.max(1, Math.round(sourceWidth * scale))
+    const height = Math.max(1, Math.round(sourceHeight * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d')
+    if (!context) return original()
+    // Flatten transparent PNG and WebP photos onto the closet’s warm backdrop.
+    if (file.type === 'image/png' || file.type === 'image/webp') {
+      context.fillStyle = '#f5f1ec'
+      context.fillRect(0, 0, width, height)
+    }
+    context.drawImage(source, 0, 0, width, height)
+    const colorHint = hintColorFromImage(source, sourceWidth, sourceHeight)
+    const dataUrl = await canvasToDataUrl(canvas, 'image/jpeg', 0.82)
+    return {
+      dataUrl, originalBytes: file.size, storedBytes: dataUrl.length, width, height, colorHint,
+      compressed: width < sourceWidth || height < sourceHeight || dataUrl.length * .75 < file.size,
+    }
+  } finally { bitmap?.close() }
 }

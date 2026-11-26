@@ -82,3 +82,5 @@ Wardrobe items and images use IndexedDB where supported. Existing localStorage i
 To wear something specific, open its photo in **My closet** and tap **Style this piece**, or use the **Build around** picker on Style. The stylist keeps it in every suggestion and tells you when it needs a compatible piece.
 
 **Get a ChatGPT look (optional):** In Style, choose an occasion plus any garment you want to keep in the outfit, then select **Try a ChatGPT look**. Review the text, copy it into ChatGPT yourself, and paste the JSON response back while the app tab remains open. The prompt contains only clothing names/categories/colors and the selected styling preferences. The app never uploads photos or sends prompts automatically, and only imports real saved item IDs forming a valid outfit. The automatic local matcher remains available without ChatGPT.
+
+**Find a garment:** Search My closet by garment name, brand, category, color, or occasion. Visibility and category filters combine with your search. When a photo has a clear central color, the app may offer a tag. Confirm it with one tap or leave it blank; the estimate uses only your device.

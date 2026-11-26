@@ -130,3 +130,5 @@ Nov 26 verification: lint, 18 Vitest tests, the production build, and six real C
 Garment anchor: 19 Vitest checks and six phone-width Chromium flows passed, including opening a photographed item, choosing Style this piece, and verifying the result preserves the selected garment. No service is contacted.
 
 Manual AI handoff: 22 Vitest tests and seven Chromium Playwright flows passed, including text-only prompt review, invented-piece rejection, valid reply import, save and reopen. The UI fixture mimics a response; it does not exercise a live model or any network endpoint.
+
+Closet navigation: 26 Vitest tests and all seven real Chromium flows passed; the bulk mobile flow uses a suggested Navy color, then finds that garment through search. Ambiguous and transparent fixture photos do not get a color guess.
