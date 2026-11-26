@@ -34,7 +34,7 @@ Garments and photos are saved on this browser in IndexedDB when available, with 
 3. Open **Style**, add an occasion, and choose a vibe and conditions. **Build my looks** proposes up to three combinations using only your photographed clothes by default. Review the explanation and save a look to reopen later.
 4. Select **Include labeled sample pieces** for a demonstration before adding your own clothes. This may include explicitly labeled borrowable samples.
 
-The built-in stylist uses matching rules. The optional ChatGPT handoff below uses a separate conversation that you control. Clothing photos and looks do not leave your browser or sync to another device, browser or website address. Brian/Alex are seeded roles in the same browser, not accounts; the invite is for testing rather than access control. Clearing browser data may erase your closet.
+The built-in stylist uses matching rules. The optional ChatGPT handoff below uses a separate conversation that you control. Clothing photos and looks do not leave your browser or sync to another device, browser profile or site origin. Wardrobe changes refresh other tabs on the same origin in a supported browser. Brian/Alex are seeded roles in the same browser, not accounts; the invite is for testing rather than access control. Clearing browser data may erase your closet.
 
 ## Checks
 

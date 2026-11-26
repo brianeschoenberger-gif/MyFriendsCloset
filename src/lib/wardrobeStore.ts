@@ -42,3 +42,14 @@ export async function transactWardrobe(
     transaction.onerror = () => { /* The abort event reports the caller-visible error. */ }
   })
 }
+
+export async function readWardrobe(database: IDBDatabase): Promise<ClosetItem[]> {
+  return new Promise<ClosetItem[]>((resolve, reject) => {
+    const transaction = database.transaction(bucket, 'readonly')
+    const request = transaction.objectStore(bucket).get(itemsKey)
+    transaction.onabort = () => reject(transaction.error ?? new Error('Could not reread the wardrobe.'))
+    transaction.oncomplete = () => Array.isArray(request.result)
+      ? resolve(request.result as ClosetItem[])
+      : reject(new Error('Wardrobe storage needs recovery.'))
+  })
+}

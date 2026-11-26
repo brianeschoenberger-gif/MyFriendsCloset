@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Wardrobe edits now appear in other tabs of the same browser without uploading data or dropping pieces saved from the other tab.
+
 - Larger closets now render photos in groups and defer off-screen image decoding. Search still finds clothes outside the first group, and keyboard users are moved to the newly shown items.
 
 - Increased contrast for secondary text and made mobile navigation and item labels easier to read. Added an optional axe-core audit of six first-run screens at phone width.

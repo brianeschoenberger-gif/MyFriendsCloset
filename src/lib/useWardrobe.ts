@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ClosetItem } from '../types'
 import { isQuotaError, storageKeys, type StorageFailure } from './storage'
-import { openWardrobeDatabase, transactWardrobe } from './wardrobeStore'
+import { openWardrobeDatabase, readWardrobe, transactWardrobe } from './wardrobeStore'
 
+const changeChannel = 'mfc-local-wardrobe-changes'
 const migratedKey = 'mfc-wardrobe-migrated-v2'
 type Backend = 'indexed' | 'legacy' | 'blocked'
 
@@ -44,6 +45,9 @@ export function useWardrobe(defaultItems: ClosetItem[]) {
   const current = useRef(legacy.items)
   const opening = useRef<Promise<Backend> | null>(null)
   const busy = useRef(false)
+  const mutation = useRef(0)
+  const channel = useRef<BroadcastChannel | null>(null)
+  const flushRefresh = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -69,9 +73,69 @@ export function useWardrobe(defaultItems: ClosetItem[]) {
     return () => { mounted = false }
   }, [legacy])
 
+  useEffect(() => {
+    let mounted = true
+    let queued = false
+    let refreshing = false
+    async function refresh() {
+      if (!mounted) return
+      if (busy.current || refreshing) { queued = true; return }
+      refreshing = true
+      const before = mutation.current
+      let db: IDBDatabase | undefined
+      try {
+        const backend = await opening.current
+        if (!mounted) return
+        if (mutation.current !== before || busy.current) { queued = true; return }
+        let snapshot: ClosetItem[] | undefined
+        if (backend === 'indexed') {
+          db = await openWardrobeDatabase()
+          snapshot = await readWardrobe(db)
+        } else if (backend === 'legacy') {
+          const stored = readLegacy(defaultItems)
+          if (!stored.invalid && !stored.migrated) snapshot = stored.items
+        }
+        if (!mounted) return
+        if (mutation.current !== before || busy.current) { queued = true; return }
+        if (snapshot) {
+          current.current = snapshot
+          setItems(snapshot)
+        }
+      } catch {
+        // Background refresh must never replace the last good state with empty data.
+      } finally {
+        db?.close()
+        refreshing = false
+        if (queued && !busy.current && mounted) { queued = false; void refresh() }
+      }
+    }
+    function onVisibility() { if (document.visibilityState === 'visible') void refresh() }
+    function onStorage(event: StorageEvent) { if (event.key === storageKeys.items) void refresh() }
+    function onMessage() { void refresh() }
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('storage', onStorage)
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        channel.current = new BroadcastChannel(changeChannel)
+        channel.current.addEventListener('message', onMessage)
+      }
+    } catch { /* Visibility changes still refresh the latest snapshot. */ }
+    flushRefresh.current = () => { if (queued && !refreshing) { queued = false; void refresh() } }
+
+    return () => {
+      mounted = false
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('storage', onStorage)
+      channel.current?.close()
+      channel.current = null
+      flushRefresh.current = null
+    }
+  }, [defaultItems])
+
   async function save(change: (current: ClosetItem[]) => ClosetItem[]) {
     if (busy.current) return false
     busy.current = true
+    mutation.current += 1
     let db: IDBDatabase | undefined
     try {
       const backend = await opening.current
@@ -87,11 +151,12 @@ export function useWardrobe(defaultItems: ClosetItem[]) {
       current.current = next
       setItems(next)
       setFailure(null)
+      try { channel.current?.postMessage('changed') } catch { /* The durable save already finished. */ }
       return true
     } catch (error) {
       setFailure(saveFailure(error))
       return false
-    } finally { db?.close(); busy.current = false }
+    } finally { db?.close(); busy.current = false; flushRefresh.current?.() }
   }
 
   return [items, save, failure, () => setFailure(null), loading] as const
