@@ -1,5 +1,5 @@
 # Current checkpoint · 2026-11-26
 
-- Shippable: photo-first stylist, garment-anchor outfit builder, private 12-photo intake, JSON wardrobe backup/restore, and higher-capacity browser storage with legacy migration.
-- Verification: lint, 19 Vitest checks, production build, and six real Chromium flows passed; anchored looks, safe bulk import, six-megabyte-class wardrobe, backup/restore, loan approval, and migration all exercised. Physical iPhone is unverified.
-- Next: a privacy-preserving ChatGPT handoff with user-reviewed metadata and validated outfit import, then measure value before provisioning auth or a hosted model. Keep the local stylist and borrowing demo functional.
+- Shippable: phone-first batch photos, higher-capacity IndexedDB with legacy migration, wardrobe backup/restore, on-device outfits centered on a chosen garment, and an optional ChatGPT prompt/validated-response exchange.
+- Verification: lint, 22 Vitest checks, production build, and seven real Chromium flows passed. The AI response is an end-to-end fixture, not a live model test; no photos, notes, sizes, or friend data are sent. Physical iPhone usage remains unverified.
+- Next: faster tagging and closet search, then practical styling interaction; real shared accounts and automatic model calls are separate infrastructure/privacy decisions.

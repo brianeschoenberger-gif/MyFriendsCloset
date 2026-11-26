@@ -83,3 +83,15 @@ body:has(.modal-backdrop) { overflow: hidden; }
 .style-anchor-piece { min-width: 0; flex: 1 1 14rem; display: flex; align-items: center; gap: .75rem; }
 .style-anchor-piece .item-visual { border-radius: .5rem; width: 3rem; height: 3.25rem; flex-shrink: 0; }
 .style-anchor-piece p { margin: 0; overflow-wrap: anywhere; }
+
+.ai-handoff-toggle { grid-column: 1/-1; display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .9rem; }
+.ai-handoff-toggle > span { color: var(--muted); font-size: .9rem; }
+.ai-look-panel { margin-block: 1.25rem; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: clamp(1rem, 3vw, 1.8rem); }
+.ai-look-header { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; }
+.ai-look-header h2 { font-size: clamp(1.45rem, 4vw, 2.2rem); }
+.ai-look-header .icon-button { width: 44px; height: 44px; flex-shrink: 0; }
+.ai-look-panel p { margin-block: .6rem 1rem; }
+.ai-look-panel label { display: grid; gap: .4rem; font-weight: 600; }
+.ai-look-panel textarea { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; padding: .75rem; resize: vertical; background: #fff; color: var(--ink); font-size: 1rem; }
+.ai-look-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-block: .7rem 1.3rem; }
+.ai-look-panel form .primary-button { margin-top: .75rem; }

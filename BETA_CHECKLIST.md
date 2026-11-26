@@ -128,3 +128,5 @@ Next highest-impact task: Try a six-piece capsule and a real styling occasion on
 Nov 26 verification: lint, 18 Vitest tests, the production build, and six real Chromium Playwright browser tests passed. At 390×844 the tests verified upload/compression, local lending and approval, multiple photos → outfit, and wardrobe download → restore in a fresh browser context → private visibility; the desktop styling flow and legacy wardrobe migration, deletion, and a 12-photo wardrobe beyond 5 MiB with reload were also checked. These are simulated devices, not a physical iPhone.
 
 Garment anchor: 19 Vitest checks and six phone-width Chromium flows passed, including opening a photographed item, choosing Style this piece, and verifying the result preserves the selected garment. No service is contacted.
+
+Manual AI handoff: 22 Vitest tests and seven Chromium Playwright flows passed, including text-only prompt review, invented-piece rejection, valid reply import, save and reopen. The UI fixture mimics a response; it does not exercise a live model or any network endpoint.

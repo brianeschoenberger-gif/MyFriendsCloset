@@ -295,3 +295,40 @@ test('saves a wardrobe larger than the usual localStorage quota', async ({ page 
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
   await expect(page.getByRole('heading', { name: 'Top', exact: true })).toHaveCount(12)
 })
+
+test('reviews a text-only AI prompt and safely imports a response with real closet pieces', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded-ai')) return
+    sessionStorage.setItem('seeded-ai', '1')
+    const photos = ['Office top', 'Work trousers'].map((name, index) => ({
+      id: index + 111, name, ownerId: 'owner', owner: 'Test', category: index ? 'Bottoms' : 'Tops', color: index ? 'Navy' : 'Cream',
+      visibility: 'Private', size: 'SECRET_SIZE', brand: '', glyph: 'PHOTO', occasionTags: [], notes: 'SECRET_NOTE',
+      imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNgAAAAAgABSK+kcQAAAABJRU5ErkJggg==',
+      createdAt: '2026-11-25T00:00:00.000Z', updatedAt: '2026-11-25T00:00:00.000Z',
+    }))
+    localStorage.setItem('mfc-beta-items-v1', JSON.stringify(photos))
+  })
+  await page.goto('/')
+  const nav = page.getByRole('navigation', { name: 'Mobile navigation' })
+  await nav.getByRole('button', { name: 'Style' }).click()
+  await page.getByLabel('Occasion').fill('Work meeting')
+  await page.getByRole('button', { name: 'Try a ChatGPT look' }).click()
+  const prompt = await page.getByLabel('1. Review and copy the prompt').inputValue()
+  expect(prompt).not.toMatch(/SECRET|iVBOR|localId/)
+  const { requestId, clothes } = JSON.parse(prompt.split('WARDROBE DATA:\n\n')[1])
+  const input = page.getByLabel('2. Paste the ChatGPT reply')
+  const importButton = page.getByRole('button', { name: 'Import AI looks' })
+  await input.fill(JSON.stringify({ requestId, looks: [{ pieces: ['P1', 'P99'], why: 'Invalid item' }] }))
+  await importButton.click()
+  await expect(page.getByText(/not in the shared list/)).toBeVisible()
+  await input.fill(JSON.stringify({ requestId, looks: [{ pieces: clothes.map((item: { code: string }) => item.code), why: 'A neutral work palette.' }] }))
+  await importButton.click()
+  await expect(page.getByRole('heading', { name: 'Your imported looks are ready' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Office top + Work trousers' })).toBeVisible()
+  await page.getByRole('button', { name: 'Save this look' }).click()
+  await page.reload()
+  await nav.getByRole('button', { name: 'Style' }).click()
+  await page.getByRole('button', { name: 'Saved looks (1)' }).click()
+  await expect(page.getByText(/IMPORTED AI/)).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})

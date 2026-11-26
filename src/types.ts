@@ -62,6 +62,7 @@ export type Friend = {
 }
 
 export type OutfitLook = {
+  source?: 'ai-import'
   id: string
   title: string
   itemIds: number[]

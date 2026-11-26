@@ -5,8 +5,10 @@ import { storageKeys, usePersistentState } from '../lib/storage'
 import { closetGaps, conditions, photographedPieces, suggestLooks, vibes, type Conditions, type StylePreferences, type Vibe } from '../lib/stylist'
 import type { ClosetItem, OutfitLook } from '../types'
 import { ItemVisual } from './ClosetUI'
+import { AILookPanel } from './AILookPanel'
+import { hasOutfitBase } from '../lib/aiLookExchange'
 
-type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean }
+type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean }
 
 export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (item: ClosetItem) => void; onAdd: () => void; items: ClosetItem[]; initialAnchorId?: number }) {
   const [anchorId, setAnchorId] = useState(initialAnchorId)
@@ -16,6 +18,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
   const [includeDemo, setIncludeDemo] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
   const [saved, setSaved, storageError] = usePersistentState<OutfitLook[]>(storageKeys.savedLooks, [])
+  const [showAI, setShowAI] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
   const realPieces = photographedPieces(items)
   const anchor = realPieces.find((piece) => piece.id === anchorId)
@@ -26,9 +29,11 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
   const validSaved = saved.filter((look) => resolve(look).length === look.itemIds.length)
   const visibleLooks = (result?.looks ?? []).filter((look) => resolve(look).length === look.itemIds.length)
   const selectedOccasion = occasion.trim() || 'Everyday'
+  const currentPreferences = { occasion: selectedOccasion, vibe, conditions: condition }
+  const aiReady = hasOutfitBase(realPieces, anchor?.id)
 
   function handleGenerate() {
-    const preferences = { occasion: selectedOccasion, vibe, conditions: condition }
+    const preferences = currentPreferences
     setResult({ looks: suggestLooks(source, preferences, 3, anchor?.id), preferences, gaps: closetGaps(source, anchor?.id), demo: includeDemo })
     setShowSaved(false)
   }
@@ -53,13 +58,19 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (
       </div>}
       <div className="style-source"><div><strong>{realPieces.length} photographed {realPieces.length === 1 ? 'piece' : 'pieces'}</strong><button type="button" className="text-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div><label className="demo-toggle"><input type="checkbox" checked={includeDemo} onChange={(event) => { setIncludeDemo(event.target.checked); setResult(null) }} /><span>Include labeled sample pieces</span></label></div>
       <div className="style-submit"><button className="primary-button generate" type="submit"><Sparkles size={19} /> Build my looks</button><button type="button" className="secondary-button" aria-pressed={showSaved} onClick={() => setShowSaved(!showSaved)}><Heart size={16} /> Saved looks ({validSaved.length})</button></div>
+      {aiReady && <div className="ai-handoff-toggle"><button type="button" className="text-button" aria-expanded={showAI} onClick={() => setShowAI(!showAI)}>Try a ChatGPT look</button><span>Optional copy/paste. Your photos never leave this app.</span></div>}
       {storageError && <p role="alert" className="form-error">Couldn’t save that look in this browser. Try freeing some browser storage.</p>}
     </form>
+    {showAI && aiReady && <AILookPanel key={JSON.stringify([selectedOccasion, vibe, condition, anchor?.id])} pieces={realPieces} preferences={currentPreferences} anchorId={anchor?.id} close={() => setShowAI(false)} onLooks={(looks) => {
+      setResult({ looks, preferences: currentPreferences, gaps: '', demo: false, ai: true })
+      setShowAI(false)
+      setShowSaved(false)
+    }} />}
     <div className="outfits page-container" aria-live="polite">
       {showSaved && <><div className="section-heading"><p className="eyebrow">Only in this browser</p><h2>Saved looks</h2></div>{validSaved.length ? <div className="outfit-grid">{validSaved.map((look, i) => <OutfitCard key={look.id} index={i} look={look} items={resolve(look)} onItem={onItem} onSave={toggleSave} isSaved />)}</div> : <p>Save an outfit to come back to it later.</p>}</>}
       {!showSaved && result && !visibleLooks.length && <div className="empty-state"><Shirt /><h3>Your closet needs a base outfit</h3><p>{result.gaps} Style Me won’t substitute pieces you haven’t saved. You can also turn on sample pieces to try the flow.</p><button type="button" className="secondary-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div>}
       {!showSaved && result && !!visibleLooks.length && <>
-        <div className="section-heading"><p className="eyebrow">{result.preferences.vibe} ideas for {result.preferences.occasion}{result.demo ? ' · sample pieces enabled' : ''}</p><h2>Your looks are ready</h2></div>
+        <div className="section-heading"><p className="eyebrow">{result.preferences.vibe} ideas for {result.preferences.occasion}{result.demo ? ' · sample pieces enabled' : ''}{result.ai ? ' · imported from ChatGPT' : ''}</p><h2>{result.ai ? 'Your imported looks are ready' : 'Your looks are ready'}</h2></div>
         <div className="outfit-grid">{visibleLooks.map((look, i) => <OutfitCard key={look.id} index={i} look={look} items={resolve(look)} onItem={onItem} onSave={toggleSave} isSaved={saved.some((entry) => entry.id === look.id)} />)}</div>
         {visibleLooks.length < 3 && <p className="style-limit">{result.gaps}</p>}
       </>}
@@ -72,7 +83,7 @@ function OutfitCard({ index, look, items, onItem, onSave, isSaved }: { index: nu
   const friendPieces = items.length - items.filter((item) => item.ownerId === 'owner').length
   const samples = items.length - savedPieces
   return <article className="outfit-card">
-    <span className="outfit-number">LOOK {String(index + 1).padStart(2, '0')}</span>
+    <span className="outfit-number">LOOK {String(index + 1).padStart(2, '0')}{look.source === 'ai-import' ? ' · IMPORTED AI' : ''}</span>
     <div className="outfit-items outfit-tiles">{items.map((item) => <button key={item.id} onClick={() => onItem(item)} aria-label={`View ${item.name}`}><ItemVisual item={item} compact /><span>{item.name}</span></button>)}</div>
     <h3>{look.title}</h3><p>{look.explanation}</p>
     <div className="outfit-sources">
