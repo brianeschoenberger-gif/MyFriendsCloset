@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Added a styling option to prefer combinations not worn in the last seven local days, without discarding a useful repeated outfit when alternatives are limited.
+
 - Put your own clothes first in My Closet, with sample pieces opt-in. Improved six-photo intake with distinct fallback names, progress feedback, and an explicit batch acceptance of editable on-device color hints.
 
 - Backups now carry saved personal-photo looks and wear dates, preserve existing outfits, and can retry a browser storage failure without duplicating photos. Older photo-only backups still restore.

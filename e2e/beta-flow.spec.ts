@@ -489,6 +489,13 @@ test('new user can style six owned photos for an occasion and download a local o
   expect(outgoing.filter((url) => url.startsWith('http'))).toEqual([])
 
   await page.getByRole('button', { name: 'Mark worn today' }).click()
+  const originalPhotos = await page.getByRole('article').first().getByRole('button', { name: /^View / }).allTextContents()
+  await page.getByRole('checkbox', { name: /Prefer outfits I haven’t worn/i }).check()
+  await page.getByRole('button', { name: 'Build my looks' }).click()
+  await expect(page.getByRole('heading', { name: 'Your looks are ready' })).toBeVisible()
+  const freshPhotos = await page.getByRole('article').first().getByRole('button', { name: /^View / }).allTextContents()
+  expect(freshPhotos.length).toBeGreaterThan(1)
+  expect(freshPhotos).not.toEqual(originalPhotos)
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
   await page.getByRole('button', { name: 'Backup', exact: true }).click()
   const pendingBackup = page.waitForEvent('download')

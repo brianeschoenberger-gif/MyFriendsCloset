@@ -1,4 +1,5 @@
 import type { ClosetItem, OutfitLook } from '../types'
+import { combinationKey } from './wearLog'
 
 export const vibes = ['Effortless', 'A little bold', 'Romantic'] as const
 export type Vibe = typeof vibes[number]
@@ -66,7 +67,7 @@ export function closetGaps(items: ClosetItem[], anchorId?: number) {
   return 'Add a different pair of shoes, layer, or accessory to get more variations.'
 }
 
-export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take = 3, anchorId?: number): OutfitLook[] {
+export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take = 3, anchorId?: number, recentlyWorn?: ReadonlySet<string>): OutfitLook[] {
   const tags = occasionWords(pref.occasion)
   const eligible = [...new Map(items.map((item) => [item.id, item])).values()]
   const anchor = eligible.find((item) => item.id === anchorId)
@@ -103,9 +104,9 @@ export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take =
     const score = outfit.reduce((sum, item) => sum + weight(item), 0) / outfit.length +
       (shoe ? 3 : 0) + (accessory ? 2 : 0) + (layer && pref.conditions === 'Cool' ? 4 : 0) +
       (neutrals && accents === 1 ? 3 : 0) - Math.max(0, accents - (pref.vibe === 'A little bold' ? 2 : 1)) * 3
-    const key = outfit.map((item) => item.id).sort((a, b) => a - b).join('-')
+    const key = combinationKey(outfit.map((item) => item.id))
     if (!seen.has(key)) {
-      candidates.push({ items: outfit, score, key })
+      candidates.push({ items: outfit, score: score - (recentlyWorn?.has(key) ? 18 : 0), key })
       seen.add(key)
     }
   }

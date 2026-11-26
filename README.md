@@ -87,6 +87,6 @@ To wear something specific, open its photo in **My closet** and tap **Style this
 
 **Swap one piece:** Expand **Swap a piece** on a generated look to replace a garment with another photographed garment in the same category. The garment you built around is locked, and you can undo the swaps or save your edited look separately.
 
-In **Style → Saved looks**, tap **Mark worn today** to record a day you actually wore the outfit. Tap again to undo. The date and count stay in this browser.
+In **Style → Saved looks**, tap **Mark worn today** to record a day you actually wore the outfit. Tap again to undo. The date and count stay in this browser. After logging wear, you can tell the built-in stylist to prefer other combinations from the last seven days. It may repeat a strong fit if good alternatives are limited.
 
 A saved outfit made entirely from your photos has **Ask a friend → Download outfit card**. The PNG contains garment photos and names, not notes, dates, or contact details. Nothing is shared or uploaded by the app.

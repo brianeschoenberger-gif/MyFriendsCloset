@@ -2,6 +2,14 @@
 
 Document product and technical decisions here.
 
+### 2026-11-26 - Public local beta, private user data
+
+Decision: Publish tested local-first improvements to GitHub Pages. Keep personal photos on-device, use strictly validated versioned backup files for portability, and make any ChatGPT handoff optional and reviewed. Do not turn the public demo identity into authentication.
+
+Why: The public UI is easy to test. Publishing code should not publish closets or enable unapproved transfers. Current signed-out sharing is a same-browser simulation.
+
+Consequences: Cross-device lending, permanent access links, account sync, and automatic inference require a separate opt-in private-beta release with server-side authorization, rollback and synthetic-account coverage. Use the physical-phone pilot before adding those dependencies.
+
 ### 2026-11-25 - Real-photo stylist before AI or social growth
 
 Decision: Style only photographed owner items by default. Suggestions are explainable matching rules, and sample content is opt-in. Preserve same-browser lending. No account, image upload service, or public deployment is part of this increment.

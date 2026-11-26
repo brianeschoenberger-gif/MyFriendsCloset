@@ -8,12 +8,12 @@ import { ItemVisual } from './ClosetUI'
 import { AILookPanel } from './AILookPanel'
 import { SwapRack } from './SwapRack'
 import { swapLook } from '../lib/swapLook'
-import { dateLabel, displayWearDate, toggleWear } from '../lib/wearLog'
+import { combinationKey, dateLabel, displayWearDate, recentlyWornSignatures, toggleWear } from '../lib/wearLog'
 import { hasOutfitBase } from '../lib/aiLookExchange'
 import { canMakeLookCard } from '../lib/lookCard'
 import { LookCardDownload } from './LookCardDownload'
 
-type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean }
+type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean; preferFresh?: boolean }
 
 type StylePageProps = {
   onItem: (item: ClosetItem) => void
@@ -35,6 +35,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
   const [draftSwaps, setDraftSwaps] = useState<Record<string, OutfitLook>>({})
   const [showAI, setShowAI] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
+  const [preferFresh, setPreferFresh] = useState(false)
   const realPieces = photographedPieces(items)
   const anchor = realPieces.find((piece) => piece.id === anchorId)
   const demoPieces = [...items.filter((item) => !item.imageData), ...friendItems.filter((item) => item.visibility === 'Borrowable')]
@@ -44,14 +45,17 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
   const validSaved = saved.filter((look) => resolve(look).length === look.itemIds.length)
   const visibleLooks = (result?.looks ?? []).filter((look) => resolve(look).length === look.itemIds.length)
   const selectedOccasion = occasion.trim() || 'Everyday'
-  const today = dateLabel(new Date())
+  const now = new Date()
+  const today = dateLabel(now)
+  const recentWear = recentlyWornSignatures(validSaved, now)
   const currentPreferences = { occasion: selectedOccasion, vibe, conditions: condition }
   const aiReady = hasOutfitBase(realPieces, anchor?.id)
 
   function handleGenerate() {
     const preferences = currentPreferences
     setDraftSwaps({})
-    setResult({ looks: suggestLooks(source, preferences, 3, anchor?.id), preferences, gaps: closetGaps(source, anchor?.id), demo: includeDemo })
+    const requestedFresh = preferFresh && recentWear.size > 0
+    setResult({ looks: suggestLooks(source, preferences, 3, anchor?.id, requestedFresh ? recentWear : undefined), preferences, gaps: closetGaps(source, anchor?.id), demo: includeDemo, preferFresh: requestedFresh })
     setShowSaved(false)
   }
 
@@ -78,6 +82,7 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
         {anchor && <div className="style-anchor-piece"><ItemVisual item={anchor} compact /><p><strong>{anchor.name}</strong><br />Every outfit will include this piece.</p></div>}
       </div>}
       <div className="style-source"><div><strong>{realPieces.length} photographed {realPieces.length === 1 ? 'piece' : 'pieces'}</strong><button type="button" className="text-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div><label className="demo-toggle"><input type="checkbox" checked={includeDemo} onChange={(event) => { setIncludeDemo(event.target.checked); setResult(null) }} /><span>Include labeled sample pieces</span></label></div>
+      {recentWear.size > 0 && <label className="demo-toggle fresh-toggle"><input type="checkbox" checked={preferFresh} onChange={(event) => { setPreferFresh(event.target.checked); setResult(null) }} /><span>Prefer outfits I haven’t worn in the last 7 days</span></label>}
       <div className="style-submit"><button className="primary-button generate" type="submit"><Sparkles size={19} /> Build my looks</button><button type="button" className="secondary-button" aria-pressed={showSaved} onClick={() => setShowSaved(!showSaved)}><Heart size={16} /> Saved looks ({validSaved.length})</button></div>
       {aiReady && <div className="ai-handoff-toggle"><button type="button" className="text-button" aria-expanded={showAI} onClick={() => setShowAI(!showAI)}>Try a ChatGPT look</button><span>Optional copy/paste. Your photos never leave this app.</span></div>}
       {storageError && <p role="alert" className="form-error">Couldn’t save that look in this browser. Try freeing some browser storage.</p>}
@@ -106,6 +111,8 @@ export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSav
               }) : undefined} />
             } />
         })}</div>
+        {result.preferFresh && visibleLooks.some((look) => recentWear.has(combinationKey(look.itemIds))) &&
+          <p className="style-limit">Some familiar looks are included when there aren’t enough good alternatives.</p>}
         {visibleLooks.length < 3 && <p className="style-limit">{result.gaps}</p>}
       </>}
     </div>

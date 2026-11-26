@@ -56,4 +56,11 @@ describe('the on-device outfit matcher', () => {
     expect(noShoes[0].itemIds).toEqual([1])
     expect(noShoes[0].explanation).toContain('No saved shoes')
   })
+
+  it('prefers an alternative when a recent look was worn and keeps the only workable look when needed', () => {
+    const clothes = [piece(1, 'Tops', 'white'), piece(2, 'Bottoms', 'navy'), piece(3, 'Tops', 'sage')]
+    expect(suggestLooks(clothes, baseline, 1)[0].itemIds).toEqual([1, 2])
+    expect(suggestLooks(clothes, baseline, 1, undefined, new Set(['1-2']))[0].itemIds).toEqual([3, 2])
+    expect(suggestLooks(clothes, baseline, 1, 1, new Set(['1-2']))[0].itemIds).toEqual([1, 2])
+  })
 })
