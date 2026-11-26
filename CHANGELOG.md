@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Drafted owner-only database rules for a future private account beta. Tested reads, writes, generated photo keys, and consent isolation with two synthetic accounts and a signed-out role in an in-memory PostgreSQL engine. No hosted database or photo storage was created.
+
 - Added a non-deployed server-side AI styling proof of concept. It requires verified account consent, scopes input to owner garment metadata, enforces an injected request budget, and validates suggested garment codes. Tests use fake model transport, not live inference.
 
 - Camera and bulk intake now handle compatible photos without MIME metadata, give a useful HEIC/HEIF fallback if decode fails, and honor photo orientation in Chromium.

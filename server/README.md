@@ -11,6 +11,8 @@ This directory contains a server-side proof of concept. Nothing in it is registe
 
 The provider sets `store: false` for response storage; this does not imply zero provider retention. Review the current data controls and give users accurate notice before any real inference.
 
+See the separate [owner-only database rehearsal](db/README.md).
+
 ## Must be verified before exposure
 
 - Choose an approved private hosting account and model connection. Keep keys in server secrets only. A GitHub Pages bundle must not contain server code, an API key or a configured endpoint.

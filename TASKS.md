@@ -19,6 +19,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [ ] Evaluate whether automatic category hints are necessary after real photo trials.
 - [x] Export a local wardrobe archive; preview and restore into an existing closet safely, including personal-photo saved looks and wear history.
 - [x] Prepare and test an opt-in server-side styling contract; do not deploy or connect an API key.
+- [x] Rehearse owner-only table storage and consent with two synthetic users and an explicit signed-out denial.
 - [ ] Add private sync and real invite permissions before testing cross-device lending.
 
 ## Quality harness tasks
