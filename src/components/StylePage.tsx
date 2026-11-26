@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Check, Heart, Plus, Shirt, Sparkles, Users } from 'lucide-react'
 import { friendItems, initialItems } from '../data/mockData'
-import { storageKeys, usePersistentState } from '../lib/storage'
+import type { StorageFailure } from '../lib/storage'
 import { closetGaps, conditions, photographedPieces, suggestLooks, vibes, type Conditions, type StylePreferences, type Vibe } from '../lib/stylist'
 import type { ClosetItem, OutfitLook } from '../types'
 import { ItemVisual } from './ClosetUI'
@@ -15,14 +15,23 @@ import { LookCardDownload } from './LookCardDownload'
 
 type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean; ai?: boolean }
 
-export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (item: ClosetItem) => void; onAdd: () => void; items: ClosetItem[]; initialAnchorId?: number }) {
+type StylePageProps = {
+  onItem: (item: ClosetItem) => void
+  onAdd: () => void
+  items: ClosetItem[]
+  initialAnchorId?: number
+  saved: OutfitLook[]
+  setSaved: (update: (current: OutfitLook[]) => OutfitLook[]) => boolean
+  storageError: StorageFailure | null
+}
+
+export function StylePage({ onItem, onAdd, items, initialAnchorId, saved, setSaved, storageError }: StylePageProps) {
   const [anchorId, setAnchorId] = useState(initialAnchorId)
   const [occasion, setOccasion] = useState('Everyday')
   const [vibe, setVibe] = useState<Vibe>('Effortless')
   const [condition, setCondition] = useState<Conditions>('Mild')
   const [includeDemo, setIncludeDemo] = useState(false)
   const [result, setResult] = useState<Result | null>(null)
-  const [saved, setSaved, storageError] = usePersistentState<OutfitLook[]>(storageKeys.savedLooks, [])
   const [draftSwaps, setDraftSwaps] = useState<Record<string, OutfitLook>>({})
   const [showAI, setShowAI] = useState(false)
   const [showSaved, setShowSaved] = useState(false)

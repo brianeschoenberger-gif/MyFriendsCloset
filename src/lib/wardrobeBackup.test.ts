@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { makeWardrobeBackup, parseWardrobeBackup, mergeWardrobeBackup } from './wardrobeBackup'
+import { makeWardrobeBackup, parseWardrobeArchive, parseWardrobeBackup, mergeLookBackup, mergeWardrobeBackup, planWardrobeRestore } from './wardrobeBackup'
 import type { ClosetItem } from '../types'
 
 const black = 'data:image/png;base64,QUJD'
@@ -39,5 +39,46 @@ describe('wardrobe backups', () => {
     expect(merged[1].id).not.toBe(1)
     expect(merged[1].visibility).toBe('Private')
     expect(mergeWardrobeBackup(merged, [piece(1, white)])).toEqual(merged)
+  })
+})
+
+describe('portable saved outfits', () => {
+  const pants = { ...piece(2, white), category: 'Bottoms', name: 'Day pants' }
+  const look = { id: 'custom-1-2', itemIds: [1, 2], anchorId: 1, source: 'custom' as const,
+    title: 'Wear to dinner', occasion: 'Dinner', vibe: 'Effortless', explanation: 'A quick look', wornOn: ['2026-11-26'] }
+
+  it('round-trips personal photos and wear dates and omits outfits with non-portable pieces', () => {
+    const result = parseWardrobeArchive(makeWardrobeBackup([piece(), pants, { ...piece(3), ownerId: 'friend' }], [
+      look, { ...look, id: 'mixed', itemIds: [1, 3] },
+    ]))
+    expect(result.items).toHaveLength(2)
+    expect(result.items.every((entry) => entry.visibility === 'Private')).toBe(true)
+    expect(result.looks).toEqual([look])
+    expect(parseWardrobeArchive(makeWardrobeBackup([piece()])).looks).toEqual([])
+  })
+
+  it('refuses missing item IDs, malformed wear dates, and invalid anchors before applying an archive', () => {
+    const data = JSON.parse(makeWardrobeBackup([piece(), pants], [look]))
+    expect(() => parseWardrobeArchive(JSON.stringify({ ...data, looks: [{ ...look, itemIds: [1, 99] }] }))).toThrow(/missing clothes/)
+    expect(() => parseWardrobeArchive(JSON.stringify({ ...data, looks: [{ ...look, wornOn: ['2026-02-30'] }] }))).toThrow(/wear dates/)
+    expect(() => parseWardrobeArchive(JSON.stringify({ ...data, looks: [{ ...look, anchorId: 99 }] }))).toThrow(/focus piece/)
+  })
+
+  it('remaps colliding photos and merges wear history without replacing local labels or duplicating looks', () => {
+    const local = [{ ...piece(1, white), name: 'Different shirt' }, { ...pants, id: 3 }]
+    const plan = planWardrobeRestore(local, [piece(), pants])
+    const newId = plan.ids.get(1)!
+    expect(newId).not.toBe(1)
+    expect(plan.ids.get(2)).toBe(3)
+    const first = mergeLookBackup([], [look], plan.ids, plan.items)
+    expect(first).toMatchObject({ added: 1, skipped: 0 })
+    expect(first.looks[0]).toMatchObject({ itemIds: [newId, 3], anchorId: newId })
+    const localEdited = [{ ...first.looks[0], title: 'Keep my label', wornOn: ['2026-11-24'] }]
+    const again = planWardrobeRestore(plan.items, [piece(), pants])
+    const merged = mergeLookBackup(localEdited, [look], again.ids, again.items)
+    expect(merged).toMatchObject({ added: 0, historyEdits: 1 })
+    expect(merged.looks).toHaveLength(1)
+    expect(merged.looks[0]).toMatchObject({ title: 'Keep my label', wornOn: ['2026-11-26', '2026-11-24'] })
+    expect(mergeLookBackup(merged.looks, [look], again.ids, again.items)).toMatchObject({ added: 0, historyEdits: 0 })
   })
 })

@@ -140,7 +140,7 @@ describe('My Friends Closet playable beta', () => {
 
   it('does not invent outfits when the saved closet is too small', async () => {
     const user = userEvent.setup()
-    render(<StylePage onAdd={vi.fn()} onItem={vi.fn()} items={[]} />)
+    render(<StylePage onAdd={vi.fn()} onItem={vi.fn()} items={[]} saved={[]} setSaved={vi.fn(() => true)} storageError={null} />)
     await user.click(screen.getByRole('button', { name: 'Build my looks' }))
     expect(screen.getByRole('heading', { name: 'Your closet needs a base outfit' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Your looks are ready' })).not.toBeInTheDocument()

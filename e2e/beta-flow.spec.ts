@@ -422,7 +422,7 @@ test('home and quick intake fit small phones through desktop, with keyboard focu
   await expect(bulk).toBeFocused()
 })
 
-test('new user can style six owned photos for an occasion and download a local outfit card', async ({ page }, testInfo) => {
+test('new user can style six owned photos for an occasion and download a local outfit card', async ({ page, browser }, testInfo) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Add your first photos' }).click()
   const dialog = page.getByRole('dialog', { name: 'Add photos in bulk' })
@@ -472,4 +472,44 @@ test('new user can style six owned photos for an occasion and download a local o
   expect(png.readUInt32BE(16)).toBe(1000)
   expect(png.readUInt32BE(20)).toBeGreaterThan(600)
   expect(outgoing.filter((url) => url.startsWith('http'))).toEqual([])
+
+  await page.getByRole('button', { name: 'Mark worn today' }).click()
+  await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
+  await page.getByRole('button', { name: 'Backup', exact: true }).click()
+  const pendingBackup = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download wardrobe' }).click()
+  const backupFile = testInfo.outputPath('six-photos-and-looks.json')
+  await (await pendingBackup).saveAs(backupFile)
+
+  const fresh = await browser.newPage({ viewport: { width: 390, height: 844 }, baseURL: testInfo.project.use.baseURL })
+  try {
+    await fresh.addInitScript(() => {
+      const set = Storage.prototype.setItem
+      Storage.prototype.setItem = function(key, value) {
+        if (key === 'mfc-beta-saved-looks-v1' && sessionStorage.getItem('test-block-look-save') === '1') {
+          throw new DOMException('Test storage limit', 'QuotaExceededError')
+        }
+        return set.call(this, key, value)
+      }
+    })
+    await fresh.goto('/')
+    await fresh.evaluate(() => sessionStorage.setItem('test-block-look-save', '1'))
+    const freshNav = fresh.getByRole('navigation', { name: 'Mobile navigation' })
+    await freshNav.getByRole('button', { name: 'Closet' }).click()
+    await fresh.getByRole('button', { name: 'Backup', exact: true }).click()
+    await fresh.getByLabel('Choose wardrobe backup file').setInputFiles(backupFile)
+    await expect(fresh.getByText('1 new saved look, 0 existing looks with wear history to merge.')).toBeVisible()
+    await fresh.getByRole('button', { name: 'Restore backup' }).click()
+    await expect(fresh.getByRole('alert')).toContainText('Your photos are safe, but the outfits could not be saved.')
+    await expect(fresh.getByText('These pieces are already in your closet.', { exact: false })).toBeVisible()
+    await fresh.evaluate(() => sessionStorage.removeItem('test-block-look-save'))
+    await fresh.getByRole('button', { name: 'Restore backup' }).click()
+    await expect(fresh.getByRole('status').filter({ hasText: 'Wardrobe and looks restored' })).toBeVisible()
+    await freshNav.getByRole('button', { name: 'Style' }).click()
+    await expect(fresh.getByText('6 photographed pieces')).toBeVisible()
+    await fresh.getByRole('button', { name: 'Saved looks (1)' }).click()
+    await expect(fresh.getByText('Last worn today · 1 day logged')).toBeVisible()
+  } finally {
+    await fresh.close()
+  }
 })

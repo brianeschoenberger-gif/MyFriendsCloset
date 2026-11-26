@@ -10,8 +10,8 @@ import { storageKeys, usePersistentState } from './lib/storage'
 import { conflictingApproval } from './lib/borrowDates'
 import { useWardrobe } from './lib/useWardrobe'
 import { filterCloset, type ClosetFilters } from './lib/closetSearch'
-import { mergeWardrobeBackup } from './lib/wardrobeBackup'
-import type { BorrowRequest, BorrowStatus, ClosetItem, Identity, Page, Visibility } from './types'
+import { mergeLookBackup, planWardrobeRestore } from './lib/wardrobeBackup'
+import type { BorrowRequest, BorrowStatus, ClosetItem, Identity, OutfitLook, Page, Visibility } from './types'
 import './App.css'
 
 function App() {
@@ -19,6 +19,7 @@ function App() {
   const inviteFriendMode = inviteParams?.get('invite') === 'MFC-BRIAN' && inviteParams.get('mode') === 'friend'
   const [identity, setIdentity] = usePersistentState<Identity>(storageKeys.identity, inviteFriendMode ? 'friend' : 'owner')
   const [items, setItems, itemStorageFailure, clearItemStorageFailure, wardrobeLoading] = useWardrobe(initialItems)
+  const [savedLooks, setSavedLooks, looksStorageFailure] = usePersistentState<OutfitLook[]>(storageKeys.savedLooks, [])
   const [requests, setRequests, requestStorageFailure, clearRequestStorageFailure] = usePersistentState<BorrowRequest[]>(storageKeys.requests, initialRequests)
   const [onboardingDismissed, setOnboardingDismissed] = usePersistentState(storageKeys.onboardingDismissed, inviteFriendMode)
   const [stylingAnchorId, setStylingAnchorId] = useState<number>()
@@ -163,7 +164,7 @@ function App() {
       </div><div className="filter-row">{['All', 'Dresses', 'Sets', 'Jackets', 'Shoes', 'Accessories', 'Tops', 'Bottoms'].map((filter) => <button key={filter} className={category === filter ? 'filter active' : 'filter'} aria-pressed={category === filter} onClick={() => setCategory(filter)}>{filter}</button>)}<button className={photoOnly ? 'filter active' : 'filter'} aria-pressed={photoOnly} onClick={() => setPhotoOnly(!photoOnly)}>My photos only</button></div><div className="closet-results-line"><span role="status">{visibleOwnItems.length} {visibleOwnItems.length === 1 ? 'piece' : 'pieces'} shown</span>{activeFilters && <button className="text-button" onClick={resetClosetFilters}>Clear filters</button>}</div>{visibleOwnItems.length ? <div className="item-grid">{visibleOwnItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div> : <div className="empty-state"><Shirt /><h3>No matching pieces</h3><p>Change the filters, or photograph a piece to add it here.</p></div>}</section>}
       {page === 'friends' && (identity === 'friend' ? <FriendCloset items={friendViewItems} borrowableOnly={borrowableOnly} setBorrowableOnly={setBorrowableOnly} onItem={setSelectedItem} copyInviteLink={copyInviteLink} shareInviteLink={shareInviteLink} /> : <section className="page-container"><PageHeading eyebrow="The good stuff" title="Friends' closets" subtitle="Borrow something with a story, not another shopping bag." /><div className="friend-strip">{friends.map((friend) => <button className="friend-pill" key={friend.name}><span className="avatar" style={{ background: friend.color }}>{friend.initials}</span><span><b>{friend.name}</b><small>{friend.count} pieces</small></span></button>)}</div><div className="section-heading inline"><div><p className="eyebrow">Palm Springs picks</p><h2>Shared with you</h2></div><BorrowableToggle value={borrowableOnly} setValue={setBorrowableOnly} /></div><div className="item-grid">{ownerFriendItems.map((item) => <ItemCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />)}</div></section>)}
       {page === 'requests' && <RequestsPage requests={requests} identity={identity} resolveRequest={resolveRequest} />}
-      {identity === 'owner' && page === 'style' && <StylePage key={stylingAnchorId ?? "any"} initialAnchorId={stylingAnchorId} onItem={setSelectedItem} onAdd={() => setShowAdd(true)} items={ownerItems} />}
+      {identity === 'owner' && page === 'style' && <StylePage key={stylingAnchorId ?? "any"} initialAnchorId={stylingAnchorId} onItem={setSelectedItem} onAdd={() => setShowAdd(true)} items={ownerItems} saved={savedLooks} setSaved={setSavedLooks} storageError={looksStorageFailure} />}
       {page === 'event' && <EventPage onItem={setSelectedItem} />}
     </main>
     <nav className="mobile-nav" aria-label="Mobile navigation"><MobileNav icon={<Home />} label="Home" active={page === 'home'} onClick={() => navigate('home')} />{identity === 'owner' && <MobileNav icon={<Shirt />} label="Closet" active={page === 'closet'} onClick={() => navigate('closet')} />}<MobileNav icon={<Users />} label="Share" active={page === 'friends'} onClick={() => navigate('friends')} />{identity === 'owner' && <MobileNav icon={<Sparkles />} label="Style" active={page === 'style'} onClick={() => navigate('style')} />}<MobileNav icon={<CircleUserRound />} label="Requests" active={page === 'requests'} onClick={() => navigate('requests')} /></nav>
@@ -177,10 +178,21 @@ function App() {
       if (saved) { setShowBulkAdd(false); showPersonalPhotos(); notify(`Saved ${drafts.length} private ${drafts.length === 1 ? 'piece' : 'pieces'}`) }
       return saved
     }} />}
-    {showBackup && identity === 'owner' && <WardrobeBackupModal items={items} close={() => setShowBackup(false)} restore={async (imported) => {
-      const saved = await setItems((current) => mergeWardrobeBackup(current, imported))
-      if (saved) { setShowBackup(false); showPersonalPhotos(); notify('Wardrobe restored') }
-      return saved
+    {showBackup && identity === 'owner' && <WardrobeBackupModal items={items} looks={savedLooks} close={() => setShowBackup(false)} restore={async (archive) => {
+      let plan = planWardrobeRestore(items, archive.items)
+      const saved = await setItems((current) => {
+        plan = planWardrobeRestore(current, archive.items)
+        return plan.items.length === current.length ? current : plan.items
+      })
+      if (!saved) return 'not-saved'
+      const outfitPlan = mergeLookBackup(savedLooks, archive.looks, plan.ids, plan.items)
+      const looksChanged = outfitPlan.added + outfitPlan.historyEdits > 0
+      if (looksChanged && !setSavedLooks(outfitPlan.looks)) return 'photos-only'
+      if (outfitPlan.skipped) return 'some-skipped'
+      setShowBackup(false)
+      showPersonalPhotos()
+      notify(looksChanged ? 'Wardrobe and looks restored' : 'Wardrobe restored')
+      return 'complete'
     }} />}
     {editingItem && identity === 'owner' && <AddItemModal item={editingItem} close={() => setEditingItem(null)} save={async (updated) => {
       const saved = await setItems((current) => current.map((item) => item.id === updated.id ? updated : item))
