@@ -113,9 +113,9 @@ export async function prepareImageForStorage(file: File, maxDimension = 1600): P
     const dataUrl = await fileToDataUrl(file)
     return { dataUrl, originalBytes: file.size, storedBytes: dataUrl.length, compressed: false }
   }
-  if (file.type === 'image/svg+xml' || file.type === 'image/gif' || (!canBitmapDecode && !canNativeDecode)) return original()
+  if (file.type === 'image/gif' || (!canBitmapDecode && !canNativeDecode)) return original()
 
-  const bitmap = canBitmapDecode ? await window.createImageBitmap(file).catch(() => undefined) : undefined
+  const bitmap = canBitmapDecode ? await window.createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => undefined) : undefined
   const source = bitmap ?? (canNativeDecode ? await decodeBrowserImage(file) : undefined)
   if (!source) throw new Error('Unsupported photo format')
   try {

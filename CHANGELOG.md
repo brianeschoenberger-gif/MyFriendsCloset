@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Camera and bulk intake now handle compatible photos without MIME metadata, give a useful HEIC/HEIF fallback if decode fails, and honor photo orientation in Chromium.
+
 - Added a styling option to prefer combinations not worn in the last seven local days, without discarding a useful repeated outfit when alternatives are limited.
 
 - Put your own clothes first in My Closet, with sample pieces opt-in. Improved six-photo intake with distinct fallback names, progress feedback, and an explicit batch acceptance of editable on-device color hints.

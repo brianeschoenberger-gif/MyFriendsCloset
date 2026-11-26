@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Images, Trash2, X } from 'lucide-react'
+import { photoDecodeMessage, usablePhoto } from '../lib/photoFiles'
 import { makeBatchLabels } from '../lib/bulkLabels'
 import { useDialogFocus } from '../lib/useDialogFocus'
 import { prepareImageForStorage, type ImageProcessingResult } from '../lib/storage'
@@ -33,15 +34,17 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
     const issues = files.length > remaining ? [`Only ${remaining} more photos fit in this batch. Add the rest in another batch.`] : []
     const prepared: Draft[] = []
     for (const file of files.slice(0, remaining)) {
-      if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.size > 25_000_000) {
-        issues.push(`${file.name}: choose a photo under 25 MB.`)
+      let accepted: File
+      try { accepted = usablePhoto(file, 25_000_000) }
+      catch (cause) {
+        issues.push(`${file.name}: ${cause instanceof Error ? cause.message : 'Choose a different photo.'}`)
         continue
       }
       try {
-        const photo = await prepareImageForStorage(file, 1000)
+        const photo = await prepareImageForStorage(accepted, 1000)
         prepared.push({ id: ++draftId, name: '', category: '', color: '', photo })
       } catch {
-        issues.push(`${file.name}: could not open this photo. Try exporting it as JPEG or PNG.`)
+        issues.push(`${file.name}: ${photoDecodeMessage(accepted)}`)
       }
     }
     setDrafts((current) => [...current, ...prepared])

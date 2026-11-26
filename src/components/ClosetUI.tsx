@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Camera, Heart, Pencil, Sparkles, Trash2, X } from 'lucide-react'
 import { prepareImageForStorage } from '../lib/storage'
+import { photoDecodeMessage, usablePhoto } from '../lib/photoFiles'
 import { useDialogFocus } from '../lib/useDialogFocus'
 import { checkLoanDates } from '../lib/borrowDates'
 import type { BorrowRequest, ClosetItem, Identity, Visibility } from '../types'
@@ -39,17 +40,18 @@ export function AddItemModal({ close, save, item }: { close: () => void; save: (
 
   async function selectImage(file?: File) {
     if (!file) return
-    if (!file.type.startsWith('image/')) { setError('Choose an image file.'); return }
-    if (file.size > 15_000_000) { setError('Choose an image under 15 MB. Large phone photos are compressed automatically.'); return }
+    let accepted: File
+    try { accepted = usablePhoto(file, 15_000_000) }
+    catch (error) { setError(error instanceof Error ? error.message : 'Choose a different photo.'); return }
     setProcessing(true)
     try {
-      const prepared = await prepareImageForStorage(file)
+      const prepared = await prepareImageForStorage(accepted)
       setImageData(prepared.dataUrl)
       setImageMeta(prepared)
       setColorHint(prepared.colorHint)
       setError('')
     } catch {
-      setError('We could not prepare that photo. Try another image.')
+      setError(photoDecodeMessage(accepted))
     } finally {
       setProcessing(false)
     }

@@ -25,7 +25,7 @@ Open the Vite URL on the computer. To test on a phone connected to the same Wi-F
 10. Refresh or switch back to Alex and confirm the updated status remains.
 11. Optional: in Alex mode, use **Copy invite link** to verify the demo link opens `?invite=MFC-BRIAN&mode=friend` and lands in friend view.
 
-Garments and photos are saved on this browser in IndexedDB when available, with a legacy localStorage fallback. Raster phone photos up to 15 MB are downscaled to a maximum 1600px dimension and stored as compressed JPEGs. If browser storage is full, the form remains open and explains how to recover instead of falsely reporting success. This is a durable single-device demo, not cross-device cloud sync yet.
+Garments and photos are saved on this browser in IndexedDB when available, with a legacy localStorage fallback. Raster phone photos up to 15 MB are downscaled to a maximum 1600px dimension and stored as compressed JPEGs. If a browser cannot read a HEIC/HEIF photo, try a JPEG copy. If browser storage is full, the form remains open and explains how to recover instead of falsely reporting success. This is a durable single-device demo, not cross-device cloud sync yet.
 
 ## Try your private closet stylist
 
