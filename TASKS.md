@@ -38,6 +38,7 @@ The app must work on a phone well enough that the owner can add real clothing ph
 - [x] Create a storage abstraction for identity, closet items, and requests.
 - [x] Persist user-created items and borrow requests after refresh.
 - [x] Add atomic storage quota handling and image compression.
+- [x] Migrate wardrobe items/photos to IndexedDB, with browser-local fallback.
 - [ ] Add a Supabase repository implementation behind the abstraction.
 
 ### Demo auth / identity

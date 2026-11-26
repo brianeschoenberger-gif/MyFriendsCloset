@@ -9,9 +9,10 @@ let draftId = 0
 
 type Draft = { id: number; name: string; category: string; color: string; photo: ImageProcessingResult }
 
-export function BulkAddModal({ close, save }: { close: () => void; save: (pieces: Omit<ClosetItem, 'id'>[]) => boolean }) {
+export function BulkAddModal({ close, save }: { close: () => void; save: (pieces: Omit<ClosetItem, 'id'>[]) => boolean | Promise<boolean> }) {
   const [drafts, setDrafts] = useState<Draft[]>([])
   const [processing, setProcessing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const fileInput = useRef<HTMLInputElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -48,9 +49,9 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
   }
 
   return <div className="modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !processing) close() }}>
-    <form className="add-modal bulk-modal" role="dialog" aria-modal="true" aria-labelledby="bulk-heading" onSubmit={(event) => {
+    <form className="add-modal bulk-modal" role="dialog" aria-modal="true" aria-labelledby="bulk-heading" onSubmit={async (event) => {
       event.preventDefault()
-      if (!drafts.length || processing || drafts.some((draft) => !draft.category)) return
+      if (!drafts.length || processing || saving || drafts.some((draft) => !draft.category)) return
       const now = new Date().toISOString()
       const pieces = drafts.map(({ name, category, color, photo }): Omit<ClosetItem, 'id'> => {
         const { dataUrl, ...imageMeta } = photo
@@ -62,9 +63,12 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
           visibility: 'Private', glyph: 'PHOTO', createdAt: now, updatedAt: now,
         }
       })
-      if (!save(pieces)) setErrors(['Nothing in this batch was saved. Free browser space, or remove a few photos from this batch and try again.'])
+      setSaving(true)
+      const saved = await save(pieces)
+      setSaving(false)
+      if (!saved) setErrors(['Nothing in this batch was saved. Free browser space, or remove a few photos from this batch and try again.'])
     }}>
-      <button type="button" className="modal-close" ref={closeRef} onClick={close} disabled={processing} aria-label="Close photo batch"><X /></button>
+      <button type="button" className="modal-close" ref={closeRef} onClick={close} disabled={processing || saving} aria-label="Close photo batch"><X /></button>
       <p className="eyebrow">Your wardrobe</p>
       <h2 id="bulk-heading">Add photos in bulk</h2>
       <p className="photo-local-note">Pick up to {limit} photos. Choose a category for each; names and colors are optional. All items start private and stay in this browser.</p>
@@ -91,8 +95,8 @@ export function BulkAddModal({ close, save }: { close: () => void; save: (pieces
       </fieldset>)}</div>
       <div className="bulk-footer">
         <span>{drafts.length} of {limit} photos</span>
-        <button className="primary-button" type="submit" disabled={processing || !drafts.length || drafts.some((draft) => !draft.category)}>
-          {drafts.length === 1 ? 'Save 1 private piece' : `Save ${drafts.length} private pieces`}
+        <button className="primary-button" type="submit" disabled={processing || saving || !drafts.length || drafts.some((draft) => !draft.category)}>
+          {saving ? 'Saving…' : drafts.length === 1 ? 'Save 1 private piece' : `Save ${drafts.length} private pieces`}
         </button>
       </div>
     </form>

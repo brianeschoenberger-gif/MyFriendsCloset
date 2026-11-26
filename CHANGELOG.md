@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Moved wardrobe storage to IndexedDB, safely migrating prior items and keeping the previous browser-local fallback where needed. The app still does not sync or upload photos.
+
 - Added local JSON wardrobe export and validated merge restore. Imported photos start private; repeated restores do not duplicate items.
 - Removed a mobile request-navigation race by making page resets instant and status toasts non-interactive.
 

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { mkdir, writeFile } from 'node:fs/promises'
 
 test('owner upload to persisted friend request and approval', async ({ page }) => {
   await page.goto('/')
@@ -31,10 +32,20 @@ test('owner upload to persisted friend request and approval', async ({ page }) =
   await page.getByRole('button', { name: 'Save to my closet' }).click()
 
   await expect(page.getByRole('heading', { name: 'E2E rooftop dress' })).toBeVisible()
-  expect(await page.evaluate(() => {
-    const item = JSON.parse(localStorage.getItem('mfc-beta-items-v1') ?? '[]').find((entry: { name: string }) => entry.name === 'E2E rooftop dress')
-    return item?.imageMeta?.width === 1600 && item?.imageMeta?.height === 1200 && item?.imageData?.startsWith('data:image/jpeg')
-  })).toBe(true)
+  expect(await page.evaluate(() => new Promise<boolean>((resolve, reject) => {
+    const open = indexedDB.open('mfc-wardrobe-v2')
+    open.onerror = () => reject(open.error)
+    open.onsuccess = () => {
+      const db = open.result
+      const read = db.transaction('wardrobe').objectStore('wardrobe').get('items')
+      read.onerror = () => { db.close(); reject(read.error) }
+      read.onsuccess = () => {
+        const item = read.result.find((entry: { name: string }) => entry.name === 'E2E rooftop dress')
+        db.close()
+        resolve(item?.imageMeta?.width === 1600 && item?.imageMeta?.height === 1200 && item?.imageData?.startsWith('data:image/jpeg'))
+      }
+    }
+  }))).toBe(true)
   await page.reload()
   await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
   await expect(page.getByRole('heading', { name: 'E2E rooftop dress' })).toBeVisible()
@@ -200,4 +211,84 @@ test('downloads a private wardrobe and restores it to a fresh browser without sh
     await fresh.getByRole('button', { name: 'Alex', exact: true }).click()
     await expect(fresh.getByText('Backup test jacket')).toHaveCount(0)
   } finally { await fresh.close() }
+})
+
+test('migrates an existing wardrobe before dropping its old browser copy', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded-v1')) return
+    sessionStorage.setItem('seeded-v1', 'true')
+    localStorage.setItem('mfc-beta-items-v1', JSON.stringify([{
+      id: 143, ownerId: 'owner', owner: 'Brian', glyph: 'PHOTO', name: 'Before-update jacket',
+      category: 'Jackets', color: 'Black', size: '', brand: '', visibility: 'Private', notes: 'Keep this', occasionTags: [],
+      imageData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGNgAAAAAgABSK+kcQAAAABJRU5ErkJggg==',
+      createdAt: '2026-11-24T00:00:00.000Z', updatedAt: '2026-11-24T00:00:00.000Z',
+    }]))
+  })
+  await page.goto('/')
+  const nav = page.getByRole('navigation', { name: 'Mobile navigation' })
+  await nav.getByRole('button', { name: 'Closet' }).click()
+  await expect(page.getByRole('button', { name: 'Backup', exact: true })).toBeEnabled()
+  await expect(page.getByRole('heading', { name: 'Before-update jacket' })).toBeVisible()
+  expect(await page.evaluate(() => [
+    localStorage.getItem('mfc-beta-items-v1'), localStorage.getItem('mfc-wardrobe-migrated-v2'),
+  ])).toEqual([null, '1'])
+  await page.reload()
+  await nav.getByRole('button', { name: 'Closet' }).click()
+  await expect(page.getByRole('heading', { name: 'Before-update jacket' })).toBeVisible()
+  await page.getByRole('button', { name: /Before-update jacket/ }).click()
+  await expect(page.getByText('Keep this')).toBeVisible()
+  await page.getByRole('button', { name: 'Delete item' }).click()
+  await expect(page.getByRole('heading', { name: 'Before-update jacket' })).toHaveCount(0)
+  await page.reload()
+  await nav.getByRole('button', { name: 'Closet' }).click()
+  await expect(page.getByRole('button', { name: 'Backup', exact: true })).toBeEnabled()
+  await expect(page.getByRole('heading', { name: 'Before-update jacket' })).toHaveCount(0)
+})
+
+test('saves a wardrobe larger than the usual localStorage quota', async ({ page }, testInfo) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
+  await page.getByRole('button', { name: 'Add multiple photos' }).click()
+  const photo = await page.evaluate(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1000; canvas.height = 1000
+    const ctx = canvas.getContext('2d')!
+    const data = ctx.createImageData(1000, 1000)
+    let noise = 1729
+    for (let i = 0; i < data.data.length; i += 4) {
+      noise ^= noise << 13; noise ^= noise >>> 17; noise ^= noise << 5
+      data.data[i] = noise & 255; data.data[i + 1] = (noise >>> 8) & 255
+      data.data[i + 2] = (noise >>> 16) & 255; data.data[i + 3] = 255
+    }
+    ctx.putImageData(data, 0, 0)
+    return canvas.toDataURL('image/png').split(',')[1]
+  })
+  const buffer = Buffer.from(photo, 'base64')
+  const dialog = page.getByRole('dialog', { name: 'Add photos in bulk' })
+  await mkdir(testInfo.outputDir, { recursive: true })
+  const paths = await Promise.all(Array.from({ length: 12 }, async (_, i) => {
+    const path = testInfo.outputPath(`capacity-${i}.png`)
+    await writeFile(path, buffer)
+    return path
+  }))
+  await dialog.getByLabel('Choose multiple clothing photos').setInputFiles(paths)
+  await expect(dialog.getByAltText('Clothing photo 12')).toBeVisible({ timeout: 20_000 })
+  for (let i = 1; i <= 12; i++) await dialog.getByLabel(`Category for photo ${i}`, { exact: true }).selectOption('Tops')
+  await dialog.getByRole('button', { name: 'Save 12 private pieces' }).click()
+  await expect(page.getByText('Saved 12 private pieces')).toBeVisible()
+  const bytes = await page.evaluate(() => new Promise<number>((resolve, reject) => {
+    const open = indexedDB.open('mfc-wardrobe-v2')
+    open.onerror = () => reject(open.error)
+    open.onsuccess = () => {
+      const db = open.result
+      const read = db.transaction('wardrobe').objectStore('wardrobe').get('items')
+      read.onerror = () => { db.close(); reject(read.error) }
+      read.onsuccess = () => { db.close(); resolve(JSON.stringify(read.result).length) }
+    }
+  }))
+  expect(bytes).toBeGreaterThan(5_242_880)
+  await page.reload()
+  await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('button', { name: 'Closet' }).click()
+  await expect(page.getByRole('heading', { name: 'Top', exact: true })).toHaveCount(12)
 })

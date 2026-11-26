@@ -3,7 +3,7 @@ import { Download, Upload, X } from 'lucide-react'
 import { makeWardrobeBackup, maxBackupBytes, mergeWardrobeBackup, parseWardrobeBackup } from '../lib/wardrobeBackup'
 import type { ClosetItem } from '../types'
 
-export function WardrobeBackupModal({ items, close, restore }: { items: ClosetItem[]; close: () => void; restore: (items: ClosetItem[]) => boolean }) {
+export function WardrobeBackupModal({ items, close, restore }: { items: ClosetItem[]; close: () => void; restore: (items: ClosetItem[]) => boolean | Promise<boolean> }) {
   const [incoming, setIncoming] = useState<ClosetItem[]>([])
   const [error, setError] = useState('')
   const [working, setWorking] = useState(false)
@@ -71,7 +71,7 @@ export function WardrobeBackupModal({ items, close, restore }: { items: ClosetIt
       {error && <p className="form-error" role="alert">{error}</p>}
       {incoming.length > 0 && <div className="backup-summary">
         <p>{incoming.length} {incoming.length === 1 ? 'piece' : 'pieces'} in this file. {addCount ? `${addCount} will be added as private. Existing items are kept.` : 'These pieces are already in your closet.'}</p>
-        <button className="primary-button" disabled={!addCount} onClick={() => { if (!restore(incoming)) setError('Nothing was restored. Try freeing browser storage first.') }}>Restore {addCount} private {addCount === 1 ? 'piece' : 'pieces'}</button>
+        <button className="primary-button" disabled={!addCount || working} onClick={async () => { setWorking(true); const saved = await restore(incoming); setWorking(false); if (!saved) setError('Nothing was restored. Try freeing browser storage first.') }}>Restore {addCount} private {addCount === 1 ? 'piece' : 'pieces'}</button>
       </div>}
     </section>
   </div>
