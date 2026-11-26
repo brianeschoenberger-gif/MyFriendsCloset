@@ -4,6 +4,8 @@ Track meaningful changes after each agentic loop.
 
 ## Photo-first beta · 2026-11-26
 
+- Added garment color captions to the comparison cards and verified its layout without horizontal overflow at 320, 390, 768 and 1280px.
+
 - Batch review now warns about exact photo copies, whether repeated in this batch or already saved. It never deletes or blocks a photo without the user’s choice.
 
 - Added an optional first-pick comparison between the built-in stylist and an imported ChatGPT result, with sources shown after choosing and no votes saved. The prompt can also omit custom garment names while preserving category/color and validated outfit assembly.

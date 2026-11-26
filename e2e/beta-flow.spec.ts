@@ -358,6 +358,12 @@ test('reviews the optional private prompt and compares a valid imported look wit
   const compare = page.getByRole('region', { name: 'Compare two outfit picks' })
   await expect(compare.getByRole('heading', { name: 'Which would you wear?' })).toBeVisible()
   await expect(compare.getByText('ChatGPT import', { exact: true })).toHaveCount(0)
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 844 })
+    await expect(compare.getByRole('heading', { name: 'Which would you wear?' })).toBeVisible()
+    expect(await compare.evaluate((root) => root.scrollWidth <= root.clientWidth && document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  }
+  await page.setViewportSize({ width: 390, height: 844 })
   await compare.getByRole('button', { name: 'I’d wear look A' }).click()
   await expect(compare.getByText('ChatGPT import', { exact: true })).toBeVisible()
   await expect(compare.getByText('Built-in stylist', { exact: true })).toBeVisible()

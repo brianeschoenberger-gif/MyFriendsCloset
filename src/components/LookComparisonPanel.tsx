@@ -27,7 +27,7 @@ export function LookComparisonPanel({ match, resolve, saved, onSave, close }: {
           return <article key={look.id} className="outfit-card">
             <h3>Look {letter}</h3>
             <div className="outfit-items outfit-tiles">{resolve(look).map((item) =>
-              <div key={item.id}><ItemVisual item={item} compact /><span>{item.name}</span></div>)}</div>
+              <div key={item.id}><ItemVisual item={item} compact /><span>{item.name}</span>{item.color && <small>{item.color}</small>}</div>)}</div>
             {choice && <p className="compare-source">{source}</p>}
             {choice && <button type="button" className="secondary-button" aria-pressed={isSaved} onClick={() => onSave(look)}>
               {isSaved ? `Remove saved look ${letter}` : `Save look ${letter}`}

@@ -180,3 +180,4 @@ body:has(.modal-backdrop) { overflow: hidden; }
 .bulk-duplicate-note { padding: 8px 10px; border-radius: 8px; background: #f6e7d8; }
 .bulk-duplicate-detail { grid-column: 1 / -1; margin: 0; font-weight: 600; }
 .bulk-fields .bulk-duplicate-detail + label { grid-column: 1 / -1; }
+.look-comparison-grid .outfit-tiles > div small { display: block; color: var(--muted); }
