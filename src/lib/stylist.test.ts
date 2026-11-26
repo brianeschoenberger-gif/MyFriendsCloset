@@ -34,6 +34,19 @@ describe('the on-device outfit matcher', () => {
     expect(suggestLooks(items, { ...baseline, conditions: 'Warm' }).every((look) => !look.itemIds.includes(4))).toBe(true)
   })
 
+  it('locks the selected garment into every match, even if it would not rank or is a warm-weather layer', () => {
+    const item = piece(99, 'Tops', 'fuchsia')
+    const tops = Array.from({ length: 20 }, (_, i) => piece(i + 1, 'Tops', 'ivory', ['Weekend']))
+    const bottom = piece(100, 'Bottoms', 'blue')
+    const dress = piece(102, 'Dresses', 'ivory')
+    const layer = piece(103, 'Jackets', 'navy')
+    expect(suggestLooks([...tops, item, bottom, dress], baseline, 3, 99)[0].itemIds).toEqual([99, 100])
+    expect(suggestLooks([dress, layer], { ...baseline, conditions: 'Warm' }, 3, 103)[0]).toMatchObject({ itemIds: [102, 103], explanation: expect.stringContaining('instead of wearing it in the heat') })
+    expect(suggestLooks([item, dress], baseline, 3, 99)).toEqual([])
+    expect(closetGaps([item, dress], 99)).toContain('Add a bottom')
+    expect(suggestLooks([dress], baseline, 3, 404)).toEqual([])
+  })
+
   it('does not invent a garment to fill missing categories or silently use example photos', () => {
     expect(suggestLooks([piece(1, 'Tops', 'blue'), piece(2, 'Shoes', 'white')], baseline)).toEqual([])
     expect(closetGaps([piece(1, 'Tops', 'blue')])).toMatch(/add a bottom/i)

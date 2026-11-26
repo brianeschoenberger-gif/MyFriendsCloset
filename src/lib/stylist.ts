@@ -53,7 +53,10 @@ export function photographedPieces(items: ClosetItem[]) {
   return items.filter((item) => item.ownerId === 'owner' && Boolean(item.imageData))
 }
 
-export function closetGaps(items: ClosetItem[]) {
+export function closetGaps(items: ClosetItem[], anchorId?: number) {
+  const anchor = items.find((item) => item.id === anchorId)
+  if (anchor && slot(anchor) === 'top' && !items.some((item) => slot(item) === 'bottom')) return `Add a bottom to build around ${anchor.name}.`
+  if (anchor && slot(anchor) === 'bottom' && !items.some((item) => slot(item) === 'top')) return `Add a top to build around ${anchor.name}.`
   const slots = new Set(items.map(slot))
   if (!slots.has('one-piece') && !(slots.has('top') && slots.has('bottom'))) {
     return slots.has('top') ? 'Add a bottom to pair with your top, or add a dress or set.' :
@@ -63,9 +66,11 @@ export function closetGaps(items: ClosetItem[]) {
   return 'Add a different pair of shoes, layer, or accessory to get more variations.'
 }
 
-export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take = 3): OutfitLook[] {
+export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take = 3, anchorId?: number): OutfitLook[] {
   const tags = occasionWords(pref.occasion)
   const eligible = [...new Map(items.map((item) => [item.id, item])).values()]
+  const anchor = eligible.find((item) => item.id === anchorId)
+  if (anchorId !== undefined && (!anchor || !slot(anchor))) return []
   const weights = new Map(eligible.map((item) => {
     const group = colorGroup(item)
     const occasion = matchesOccasion(item, tags)
@@ -78,17 +83,21 @@ export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take =
     return [item.id, (occasion ? 12 : 0) + vibe + warmPenalty + coolBonus + Number(Boolean(item.imageData)) * 2 + Number(item.ownerId === 'owner')]
   }))
   const weight = (item: ClosetItem) => weights.get(item.id) ?? 0
-  const pick = (kind: Slot, limit: number) => eligible.filter((item) => slot(item) === kind).sort((a, b) => weight(b) - weight(a) || a.id - b.id).slice(0, limit)
+  const pick = (kind: Slot, limit: number) => {
+    if (anchor && slot(anchor) === kind) return [anchor]
+    return eligible.filter((item) => slot(item) === kind).sort((a, b) => weight(b) - weight(a) || a.id - b.id).slice(0, limit)
+  }
   const top = pick('top', 16)
   const bottom = pick('bottom', 16)
   const bases = [...pick('one-piece', 18).map((item) => [item]), ...top.flatMap((item) => bottom.map((lower) => [item, lower]))]
   const shoes = pick('shoe', 5)
-  const layers = pref.conditions === 'Warm' ? [] : pick('layer', 3)
+  const layers = pref.conditions === 'Warm' && !(anchor && slot(anchor) === 'layer') ? [] : pick('layer', 3)
   const accessories = pick('accessory', 4)
   const candidates: Candidate[] = []
   const seen = new Set<string>()
   for (const base of bases) for (const shoe of shoes.length ? shoes : [undefined]) for (const layer of [undefined, ...layers]) for (const accessory of [undefined, ...accessories]) {
     const outfit = [...base, ...[shoe, layer, accessory].filter((item): item is ClosetItem => !!item)]
+    if (anchor && !outfit.some((item) => item.id === anchor.id)) continue
     const accents = outfit.filter((item) => colorGroup(item) === 'accent').length
     const neutrals = outfit.some((item) => colorGroup(item) === 'neutral')
     const score = outfit.reduce((sum, item) => sum + weight(item), 0) / outfit.length +
@@ -121,6 +130,8 @@ export function suggestLooks(items: ClosetItem[], pref: StylePreferences, take =
     const shoe = pieces.find((piece) => slot(piece) === 'shoe')
     const colorBalance = pieces.some((piece) => colorGroup(piece) === 'neutral') && pieces.some((piece) => colorGroup(piece) === 'accent')
     const reason = [
+      anchor ? `Built around ${anchor.name}.` : '',
+      anchor && slot(anchor) === 'layer' && pref.conditions === 'Warm' ? 'Keep this layer handy instead of wearing it in the heat.' : '',
       tagged.length ? `${tagged.map((piece) => piece.name).join(', ')} ${tagged.length === 1 ? 'has' : 'have'} occasion tags that match.` : '',
       layer && pref.conditions === 'Cool' ? `${layer.name} adds a layer for cooler conditions.` : '',
       colorBalance ? 'A neutral piece balances the stronger color.' : '',

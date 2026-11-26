@@ -8,7 +8,8 @@ import { ItemVisual } from './ClosetUI'
 
 type Result = { looks: OutfitLook[]; preferences: StylePreferences; gaps: string; demo: boolean }
 
-export function StylePage({ onItem, onAdd, items }: { onItem: (item: ClosetItem) => void; onAdd: () => void; items: ClosetItem[] }) {
+export function StylePage({ onItem, onAdd, items, initialAnchorId }: { onItem: (item: ClosetItem) => void; onAdd: () => void; items: ClosetItem[]; initialAnchorId?: number }) {
+  const [anchorId, setAnchorId] = useState(initialAnchorId)
   const [occasion, setOccasion] = useState('Everyday')
   const [vibe, setVibe] = useState<Vibe>('Effortless')
   const [condition, setCondition] = useState<Conditions>('Mild')
@@ -17,6 +18,7 @@ export function StylePage({ onItem, onAdd, items }: { onItem: (item: ClosetItem)
   const [saved, setSaved, storageError] = usePersistentState<OutfitLook[]>(storageKeys.savedLooks, [])
   const [showSaved, setShowSaved] = useState(false)
   const realPieces = photographedPieces(items)
+  const anchor = realPieces.find((piece) => piece.id === anchorId)
   const demoPieces = [...items.filter((item) => !item.imageData), ...friendItems.filter((item) => item.visibility === 'Borrowable')]
   const source = includeDemo ? [...realPieces, ...(demoPieces.length ? demoPieces : initialItems)] : realPieces
   const itemById = new Map([...items, ...friendItems].map((item) => [item.id, item]))
@@ -27,7 +29,7 @@ export function StylePage({ onItem, onAdd, items }: { onItem: (item: ClosetItem)
 
   function handleGenerate() {
     const preferences = { occasion: selectedOccasion, vibe, conditions: condition }
-    setResult({ looks: suggestLooks(source, preferences), preferences, gaps: closetGaps(source), demo: includeDemo })
+    setResult({ looks: suggestLooks(source, preferences, 3, anchor?.id), preferences, gaps: closetGaps(source, anchor?.id), demo: includeDemo })
     setShowSaved(false)
   }
 
@@ -41,6 +43,14 @@ export function StylePage({ onItem, onAdd, items }: { onItem: (item: ClosetItem)
       <label>Occasion<input value={occasion} placeholder="Work, dinner, weekend..." maxLength={65} onChange={(event) => setOccasion(event.target.value)} /></label>
       <fieldset><legend>Vibe</legend><div className="choice-row">{vibes.map((option) => <button type="button" key={option} className={vibe === option ? 'choice selected' : 'choice'} aria-pressed={vibe === option} onClick={() => setVibe(option)}>{option}</button>)}</div></fieldset>
       <fieldset><legend>Conditions</legend><div className="choice-row">{conditions.map((option) => <button type="button" key={option} className={condition === option ? 'choice selected' : 'choice'} aria-pressed={condition === option} onClick={() => setCondition(option)}>{option}</button>)}</div></fieldset>
+      {!!realPieces.length && <div className="style-anchor">
+        <label>Build around<select value={anchor?.id ?? ''} onChange={(event) => {
+          setAnchorId(event.target.value ? Number(event.target.value) : undefined)
+          setResult(null)
+          setShowSaved(false)
+        }}><option value="">Any saved piece</option>{realPieces.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.category}</option>)}</select></label>
+        {anchor && <div className="style-anchor-piece"><ItemVisual item={anchor} compact /><p><strong>{anchor.name}</strong><br />Every outfit will include this piece.</p></div>}
+      </div>}
       <div className="style-source"><div><strong>{realPieces.length} photographed {realPieces.length === 1 ? 'piece' : 'pieces'}</strong><button type="button" className="text-button" onClick={onAdd}><Plus size={16} /> Add a piece</button></div><label className="demo-toggle"><input type="checkbox" checked={includeDemo} onChange={(event) => { setIncludeDemo(event.target.checked); setResult(null) }} /><span>Include labeled sample pieces</span></label></div>
       <div className="style-submit"><button className="primary-button generate" type="submit"><Sparkles size={19} /> Build my looks</button><button type="button" className="secondary-button" aria-pressed={showSaved} onClick={() => setShowSaved(!showSaved)}><Heart size={16} /> Saved looks ({validSaved.length})</button></div>
       {storageError && <p role="alert" className="form-error">Couldn’t save that look in this browser. Try freeing some browser storage.</p>}

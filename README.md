@@ -78,3 +78,5 @@ Because the current beta uses browser-local storage, each browser/device has its
 **Keep a wardrobe backup:** **My closet → Backup** downloads a JSON file containing your supported clothing photos and their details. Keep the file somewhere you trust. To move to a new browser or recover the wardrobe, choose the file, review the number of new items, and restore. The restore never replaces your existing wardrobe and resets new items to Private. The file does not include saved looks, demo pieces, or borrowing history.
 
 Wardrobe items and images use IndexedDB where supported. Existing localStorage items are copied in a committed transaction before the old copy is removed. Lightweight preferences, saved looks and demo loans still use localStorage. Browsers without IndexedDB keep the smaller localStorage fallback; clearing site data can delete either store, so download a backup for anything you need to keep.
+
+To wear something specific, open its photo in **My closet** and tap **Style this piece**, or use the **Build around** picker on Style. The stylist keeps it in every suggestion and tells you when it needs a compatible piece.

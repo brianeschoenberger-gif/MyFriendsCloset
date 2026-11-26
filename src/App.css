@@ -75,3 +75,11 @@ body:has(.modal-backdrop) { overflow: hidden; }
 }
 
 .wardrobe-loading { padding: .5rem 5vw; }
+
+.style-this { margin-top: .65rem; }
+.style-anchor { grid-column: 1/-1; padding: .8rem 0; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.style-anchor label { flex: 1 1 16rem; min-width: 0; }
+.style-anchor select { display: block; margin-top: .3rem; width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: .45rem; min-height: 44px; padding: .5rem .8rem; background: var(--paper); font-size: 1rem; }
+.style-anchor-piece { min-width: 0; flex: 1 1 14rem; display: flex; align-items: center; gap: .75rem; }
+.style-anchor-piece .item-visual { border-radius: .5rem; width: 3rem; height: 3.25rem; flex-shrink: 0; }
+.style-anchor-piece p { margin: 0; overflow-wrap: anywhere; }

@@ -126,3 +126,5 @@ Critical blockers: None for the single-device playable beta. Cross-device sharin
 Next highest-impact task: Try a six-piece capsule and a real styling occasion on a physical iPhone. Test capture permissions, time to a useful look, and iOS storage behavior.
 
 Nov 26 verification: lint, 18 Vitest tests, the production build, and six real Chromium Playwright browser tests passed. At 390×844 the tests verified upload/compression, local lending and approval, multiple photos → outfit, and wardrobe download → restore in a fresh browser context → private visibility; the desktop styling flow and legacy wardrobe migration, deletion, and a 12-photo wardrobe beyond 5 MiB with reload were also checked. These are simulated devices, not a physical iPhone.
+
+Garment anchor: 19 Vitest checks and six phone-width Chromium flows passed, including opening a photographed item, choosing Style this piece, and verifying the result preserves the selected garment. No service is contacted.
